@@ -29,7 +29,8 @@ app.get('/health', (req, res) => {
   });
 });
 
-// TODO: routes/ 아래 라우터 연결 (예: app.use('/api/gateways', require('./routes/gateways')))
+app.use('/api/gateways', require('./routes/gateways'));
+
 // TODO: 게이트웨이 브리지 인증 미들웨어 연결 (middlewares/bridgeAuth.js)
 
 const PORT = process.env.PORT || 4000;
