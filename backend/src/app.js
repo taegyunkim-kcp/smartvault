@@ -29,6 +29,9 @@ app.get('/health', (req, res) => {
   });
 });
 
+app.use('/api/bases', require('./routes/bases'));
+app.use('/api/buildings', require('./routes/buildings'));
+app.use('/api/rooms', require('./routes/rooms'));
 app.use('/api/gateways', require('./routes/gateways'));
 
 // TODO: 게이트웨이 브리지 인증 미들웨어 연결 (middlewares/bridgeAuth.js)
