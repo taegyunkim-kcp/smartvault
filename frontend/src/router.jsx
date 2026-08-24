@@ -9,13 +9,18 @@ import BuildingListPage from './pages/buildings/BuildingListPage';
 import BuildingFormPage from './pages/buildings/BuildingFormPage';
 import RoomListPage from './pages/rooms/RoomListPage';
 import RoomFormPage from './pages/rooms/RoomFormPage';
+import DashboardBasesPage from './pages/dashboard/DashboardBasesPage';
+import DashboardBuildingsPage from './pages/dashboard/DashboardBuildingsPage';
+import DashboardRoomsPage from './pages/dashboard/DashboardRoomsPage';
 
 const router = createBrowserRouter([
   {
     path: '/',
     element: <AppLayout />,
     children: [
-      { index: true, element: <ComingSoonPage title="전체 현황" description="중대/소대/내무반 드릴다운 대시보드는 준비 중입니다." /> },
+      { index: true, element: <DashboardBasesPage /> },
+      { path: 'dashboard/:baseCode', element: <DashboardBuildingsPage /> },
+      { path: 'dashboard/:baseCode/:buildingCode', element: <DashboardRoomsPage /> },
       { path: 'events', element: <ComingSoonPage title="이벤트 로그" /> },
       { path: 'gateways', element: <GatewayListPage /> },
       { path: 'gateways/new', element: <GatewayFormPage /> },

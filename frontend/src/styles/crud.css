@@ -106,3 +106,52 @@
   gap: 8px;
   margin-top: 4px;
 }
+
+.badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 12px;
+}
+
+.badge::before {
+  content: '';
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: currentColor;
+}
+
+.badge-online {
+  color: #1a9c5c;
+}
+
+.badge-offline {
+  color: var(--text);
+  opacity: 0.5;
+}
+
+.breadcrumb {
+  font-size: 13px;
+  margin-bottom: 12px;
+  color: var(--text);
+  opacity: 0.8;
+}
+
+.breadcrumb a {
+  color: var(--accent);
+  text-decoration: none;
+}
+
+.breadcrumb a:hover {
+  text-decoration: underline;
+}
+
+.empty-state {
+  padding: 24px 0;
+  font-size: 13px;
+}
+
+.empty-state a {
+  color: var(--accent);
+}
