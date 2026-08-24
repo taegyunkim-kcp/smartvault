@@ -1,0 +1,25 @@
+{
+  "name": "smartvault-backend",
+  "version": "0.1.0",
+  "private": true,
+  "type": "commonjs",
+  "scripts": {
+    "dev": "cross-env NODE_ENV=development nodemon src/app.js",
+    "start": "cross-env NODE_ENV=production node src/app.js",
+    "start:prod-pm2": "pm2 start src/app.js --name smartvault-backend-prod --env production",
+    "migrate": "node-pg-migrate 2>NUL || echo \"migrations: backend/migrations 참고, DB에 맞는 마이그레이션 도구로 교체 예정\""
+  },
+  "dependencies": {
+    "bcrypt": "^5.1.1",
+    "cookie-parser": "^1.4.6",
+    "cors": "^2.8.5",
+    "dotenv": "^16.4.5",
+    "express": "^4.19.2",
+    "jsonwebtoken": "^9.0.2",
+    "mysql2": "^3.9.7"
+  },
+  "devDependencies": {
+    "cross-env": "^7.0.3",
+    "nodemon": "^3.1.0"
+  }
+}

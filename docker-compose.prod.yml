@@ -1,0 +1,23 @@
+services:
+  db:
+    image: mysql:8.0
+    container_name: smartvault-prod-db
+    restart: always
+    environment:
+      MYSQL_ROOT_PASSWORD: ${PROD_DB_ROOT_PASSWORD}
+      MYSQL_DATABASE: smartvault_prod
+      MYSQL_USER: ${PROD_DB_USER}
+      MYSQL_PASSWORD: ${PROD_DB_PASSWORD}
+    ports:
+      - "3308:3306"
+    volumes:
+      - smartvault_prod_db_data:/var/lib/mysql
+      - ./backend/backups:/backups
+
+volumes:
+  smartvault_prod_db_data:
+
+# 주의:
+# - PROD_DB_ROOT_PASSWORD 등은 기본값을 두지 않았습니다. .env.production에 반드시 직접 채워넣으세요.
+# - 운영 DB 볼륨은 dev와 완전히 분리된 별도 볼륨(smartvault_prod_db_data)입니다.
+# - 정기 백업은 ./backend/backups 에 mysqldump 결과를 쌓는 방식을 권장합니다 (docs/dev-environment-setup.md 참고).

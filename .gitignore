@@ -1,0 +1,44 @@
+# dependencies
+node_modules/
+__pycache__/
+*.pyc
+venv/
+.venv/
+
+# env files - 절대 커밋 금지
+.env
+.env.development
+.env.production
+.env.local
+*.env
+
+# build output
+frontend/dist/
+frontend/build/
+backend/dist/
+
+# local db / queue files
+*.sqlite3
+gateway-bridge/local_queue.sqlite3
+
+# logs
+*.log
+logs/
+
+# OS
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# editor
+.vscode/
+.idea/
+
+# firmware build artifacts
+firmware/**/.pio/
+firmware/**/build/
+
+# 절대 다시 만들지 않기: "-back", "-copy", " copy" 파일
+*-back.*
+*copy*.*
+* copy*.*

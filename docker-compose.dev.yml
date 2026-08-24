@@ -1,0 +1,17 @@
+services:
+  db:
+    image: mysql:8.0
+    container_name: smartvault-dev-db
+    restart: unless-stopped
+    environment:
+      MYSQL_ROOT_PASSWORD: ktg0506@!
+      MYSQL_DATABASE: smartvault_dev
+      MYSQL_USER: smartvault_dev
+      MYSQL_PASSWORD: ktg0506@!
+    ports:
+      - "3307:3306"
+    volumes:
+      - smartvault_dev_db_data:/var/lib/mysql
+
+volumes:
+  smartvault_dev_db_data:

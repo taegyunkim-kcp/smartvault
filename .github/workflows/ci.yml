@@ -1,0 +1,22 @@
+name: CI
+
+on:
+  pull_request:
+    branches: [main, develop]
+
+jobs:
+  backend:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: backend
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+      - run: npm install
+      - run: npm test --if-present
+
+# TODO: frontend lint/build job, gateway-bridge pytest job 추가
+# 참고: 폐쇄망 배포 자체는 이 CI로 하지 않습니다 (내부망은 별도 오프라인 배포 절차 - docs/dev-environment-setup.md 참고 예정)
