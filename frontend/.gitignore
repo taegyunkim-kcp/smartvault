@@ -12,6 +12,9 @@ dist
 dist-ssr
 *.local
 
+# run-frontend skill driver output
+screenshots/
+
 # Editor directories and files
 .vscode/*
 !.vscode/extensions.json
