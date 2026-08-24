@@ -1,7 +1,8 @@
 import { useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { createGateway, deleteGateway, getGateway, updateGateway } from '../../api/gateways';
-import './gateways.css';
+import { listRooms } from '../../api/rooms';
+import '../../styles/crud.css';
 
 const EMPTY_FORM = { gateway_id: '', room_code: '', reader_count: '', firmware_version: '' };
 
@@ -11,23 +12,36 @@ function GatewayFormPage() {
   const navigate = useNavigate();
 
   const [form, setForm] = useState(EMPTY_FORM);
-  const [loading, setLoading] = useState(isEditing);
+  const [rooms, setRooms] = useState([]);
+  const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState(null);
 
   useEffect(() => {
-    if (!isEditing) return;
-    getGateway(gatewayId)
-      .then((gw) =>
-        setForm({
-          gateway_id: gw.gateway_id,
-          room_code: gw.room_code,
-          reader_count: String(gw.reader_count),
-          firmware_version: gw.firmware_version || '',
-        })
-      )
-      .catch((err) => setError(err.message))
-      .finally(() => setLoading(false));
+    async function load() {
+      setLoading(true);
+      try {
+        const [roomList, gw] = await Promise.all([
+          listRooms(),
+          isEditing ? getGateway(gatewayId) : Promise.resolve(null),
+        ]);
+        setRooms(roomList);
+        if (gw) {
+          setForm({
+            gateway_id: gw.gateway_id,
+            room_code: gw.room_code,
+            reader_count: String(gw.reader_count),
+            firmware_version: gw.firmware_version || '',
+          });
+        }
+      } catch (err) {
+        setError(err.message);
+      } finally {
+        setLoading(false);
+      }
+    }
+
+    load();
   }, [gatewayId, isEditing]);
 
   function fieldError(keyword) {
@@ -40,7 +54,7 @@ function GatewayFormPage() {
     setSaving(true);
 
     const payload = {
-      room_code: form.room_code.trim(),
+      room_code: form.room_code,
       firmware_version: form.firmware_version.trim() || undefined,
       reader_count: form.reader_count === '' ? undefined : Number(form.reader_count),
     };
@@ -79,7 +93,7 @@ function GatewayFormPage() {
         <div className="banner-error">{error}</div>
       )}
 
-      <form className="gateway-form" onSubmit={handleSubmit}>
+      <form className="crud-form" onSubmit={handleSubmit}>
         <div className="form-field">
           <label htmlFor="gateway_id">gateway_id</label>
           <input
@@ -95,15 +109,22 @@ function GatewayFormPage() {
         </div>
 
         <div className="form-field">
-          <label htmlFor="room_code">room_code</label>
-          <input
+          <label htmlFor="room_code">내무반 (room_code)</label>
+          <select
             id="room_code"
-            type="text"
             value={form.room_code}
             required
-            placeholder="예: 1CORPS-B3-R204"
             onChange={(e) => setForm((f) => ({ ...f, room_code: e.target.value }))}
-          />
+          >
+            <option value="" disabled>
+              선택하세요
+            </option>
+            {rooms.map((room) => (
+              <option key={room.room_code} value={room.room_code}>
+                {room.room_code} — {room.room_name || '(이름 없음)'}
+              </option>
+            ))}
+          </select>
           {fieldError('room_code') && <div className="field-error">{fieldError('room_code')}</div>}
         </div>
 

@@ -13,6 +13,9 @@ const NAV_GROUPS = [
   {
     title: '등록 및 관리',
     items: [
+      { label: '중대 관리', to: '/bases' },
+      { label: '소대 관리', to: '/buildings' },
+      { label: '내무반 관리', to: '/rooms' },
       { label: '게이트웨이 관리', to: '/gateways' },
       { label: '사용자 등록', to: '/users' },
       { label: '개폐 시간표 관리', to: '/schedules' },

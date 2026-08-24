@@ -64,6 +64,16 @@ async function run(line) {
       console.log(`OK fill ${selector} = ${value}`);
       break;
     }
+    case 'select': {
+      // For native <select> elements — use this, not click+press arrows.
+      // Arrow-key navigation from a placeholder <option> lands on whichever
+      // option the keyboard-focus algorithm picks, which is easy to get
+      // wrong by one and have it silently select the neighboring option.
+      const [selector, value] = splitFirst(rest, ' ');
+      await page.locator(selector).first().selectOption(value);
+      console.log(`OK select ${selector} = ${value}`);
+      break;
+    }
     case 'press': {
       await page.keyboard.press(rest);
       console.log(`OK press ${rest}`);

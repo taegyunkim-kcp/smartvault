@@ -1,12 +1,13 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { listGateways, deleteGateway } from '../../api/gateways';
-import './gateways.css';
+import { listRooms } from '../../api/rooms';
+import '../../styles/crud.css';
 
 function GatewayListPage() {
   const navigate = useNavigate();
   const [gateways, setGateways] = useState([]);
-  const [roomCodeInput, setRoomCodeInput] = useState('');
+  const [rooms, setRooms] = useState([]);
   const [roomCode, setRoomCode] = useState('');
   const [error, setError] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -18,8 +19,11 @@ function GatewayListPage() {
       setLoading(true);
       setError(null);
       try {
-        const data = await listGateways(roomCode);
-        if (!cancelled) setGateways(data);
+        const [gwList, roomList] = await Promise.all([listGateways(roomCode), listRooms()]);
+        if (!cancelled) {
+          setGateways(gwList);
+          setRooms(roomList);
+        }
       } catch (err) {
         if (!cancelled) setError(err.message);
       } finally {
@@ -50,25 +54,20 @@ function GatewayListPage() {
     <div>
       <h2>게이트웨이 관리</h2>
 
-      <form
-        className="page-toolbar"
-        onSubmit={(e) => {
-          e.preventDefault();
-          setRoomCode(roomCodeInput.trim());
-        }}
-      >
-        <input
-          type="text"
-          placeholder="room_code로 필터"
-          value={roomCodeInput}
-          onChange={(e) => setRoomCodeInput(e.target.value)}
-        />
-        <button type="submit">검색</button>
+      <div className="page-toolbar">
+        <select value={roomCode} onChange={(e) => setRoomCode(e.target.value)}>
+          <option value="">전체 내무반</option>
+          {rooms.map((room) => (
+            <option key={room.room_code} value={room.room_code}>
+              {room.room_code} — {room.room_name || '(이름 없음)'}
+            </option>
+          ))}
+        </select>
         <div className="spacer" />
         <button type="button" className="primary" onClick={() => navigate('/gateways/new')}>
           + 새 게이트웨이
         </button>
-      </form>
+      </div>
 
       {error && <div className="banner-error">{error}</div>}
 
