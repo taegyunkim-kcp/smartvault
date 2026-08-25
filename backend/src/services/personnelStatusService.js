@@ -46,6 +46,11 @@ async function getStatusOverview() {
   };
   const personnel = [];
   const byBase = {};
+  const byBuilding = {};
+
+  function newBucket() {
+    return { registered: 0, present: 0, absent: 0, anomaly: 0, wrong_room: 0, unregistered: 0 };
+  }
 
   for (const row of rows) {
     let status = classifyPresence(row);
@@ -57,16 +62,20 @@ async function getStatusOverview() {
 
     summary[status] += 1;
 
-    if (!byBase[row.base_code]) {
-      byBase[row.base_code] = { registered: 0, present: 0, absent: 0, anomaly: 0, wrong_room: 0 };
-    }
+    if (!byBase[row.base_code]) byBase[row.base_code] = newBucket();
     byBase[row.base_code].registered += 1;
     byBase[row.base_code][status] += 1;
+
+    if (!byBuilding[row.building_code]) byBuilding[row.building_code] = newBucket();
+    byBuilding[row.building_code].registered += 1;
+    byBuilding[row.building_code][status] += 1;
 
     personnel.push({
       service_number: row.service_number,
       name: row.name,
       room_code: row.home_room_code,
+      building_code: row.building_code,
+      base_code: row.base_code,
       rfid_uid: row.rfid_uid,
       status,
       detected_room_code: row.detected_room_code,
@@ -86,6 +95,12 @@ async function getStatusOverview() {
   summary.unregistered = unregisteredTags.length;
 
   for (const tag of unregisteredTags) {
+    if (!byBase[tag.base_code]) byBase[tag.base_code] = newBucket();
+    byBase[tag.base_code].unregistered += 1;
+
+    if (!byBuilding[tag.building_code]) byBuilding[tag.building_code] = newBucket();
+    byBuilding[tag.building_code].unregistered += 1;
+
     await recordIfChanged({ rfidUid: tag.rfid_uid }, 'unregistered_uid', {
       rfidUid: tag.rfid_uid,
       roomCode: tag.room_code,
@@ -98,6 +113,7 @@ async function getStatusOverview() {
     summary,
     personnel,
     by_base: byBase,
+    by_building: byBuilding,
     unregistered_tags: unregisteredTags,
     recent_events: recentEvents,
   };

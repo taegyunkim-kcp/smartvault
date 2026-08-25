@@ -6,6 +6,7 @@ async function findMatchedPersonnelWithLatestEvent() {
        p.service_number,
        p.name,
        p.room_code AS home_room_code,
+       bl.building_code,
        b.base_code,
        p.rfid_uid,
        re.event_type AS latest_event_type,
@@ -21,7 +22,7 @@ async function findMatchedPersonnelWithLatestEvent() {
        )
      LEFT JOIN gateways g ON g.gateway_id = re.gateway_id
      WHERE p.rfid_uid IS NOT NULL
-     GROUP BY p.service_number, p.name, p.room_code, b.base_code, p.rfid_uid, re.event_type, re.occurred_at, g.room_code
+     GROUP BY p.service_number, p.name, p.room_code, bl.building_code, b.base_code, p.rfid_uid, re.event_type, re.occurred_at, g.room_code
      ORDER BY p.service_number`
   );
   return rows;
