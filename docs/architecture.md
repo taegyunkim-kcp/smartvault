@@ -212,6 +212,8 @@ smartvault/
 
 **즉시 조치 권장(재설계와 별개로 지금 해야 할 것)**: 기존 서버가 아직 살아있다면 DB 비밀번호부터 교체하세요. 코드가 zip으로 공유된 이상 이미 노출된 것으로 간주하는 게 안전합니다.
 
+인원(군인)-RFID 매핑, 도어 개폐 정책, 판정 이벤트까지 포함한 상세 스키마는 [data-model-personnel-door-control.md](./data-model-personnel-door-control.md) 참고.
+
 ---
 
 ## 7. 협업 프로세스 (개발자 합류 대비)
