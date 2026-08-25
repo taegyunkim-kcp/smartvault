@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { getBaseSummaries, getPersonnelStatus } from '../../api/dashboard';
+import { getBaseSummaries, getPersonnelStatus, getRoomSummaries } from '../../api/dashboard';
 import '../../styles/crud.css';
 
 const STATUS_LABELS = {
@@ -9,6 +9,9 @@ const STATUS_LABELS = {
   unregistered_uid: '미등록',
   wrong_room: '타내무반',
 };
+
+const DOOR_STATE_LABEL = { open: '열림', closed: '닫힘' };
+const LOCK_STATE_LABEL = { locked: '잠김', unlocked: '열림 허용' };
 
 const STAT_CARDS = [
   { key: 'total_registered', label: '전체 등록' },
@@ -22,6 +25,7 @@ const STAT_CARDS = [
 function DashboardBasesPage() {
   const navigate = useNavigate();
   const [bases, setBases] = useState([]);
+  const [allRooms, setAllRooms] = useState([]);
   const [personnelStatus, setPersonnelStatus] = useState(null);
   const [selectedStat, setSelectedStat] = useState(null);
   const [error, setError] = useState(null);
@@ -32,9 +36,14 @@ function DashboardBasesPage() {
       setLoading(true);
       setError(null);
       try {
-        const [baseSummaries, status] = await Promise.all([getBaseSummaries(), getPersonnelStatus()]);
+        const [baseSummaries, status, roomSummaries] = await Promise.all([
+          getBaseSummaries(),
+          getPersonnelStatus(),
+          getRoomSummaries(),
+        ]);
         setBases(baseSummaries);
         setPersonnelStatus(status);
+        setAllRooms(roomSummaries);
       } catch (err) {
         setError(err.message);
       } finally {
@@ -165,6 +174,57 @@ function DashboardBasesPage() {
                   )}
                 </td>
                 <td>{base.event_count_24h}건</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      )}
+
+      <h3 className="section-title">전체 내무반 개폐 상태</h3>
+
+      {allRooms.length === 0 ? (
+        <div className="empty-state">등록된 내무반이 없습니다.</div>
+      ) : (
+        <table className="data-table">
+          <thead>
+            <tr>
+              <th>내무반</th>
+              <th>소속 소대</th>
+              <th>게이트웨이</th>
+              <th>문 상태</th>
+              <th>개폐 설정</th>
+            </tr>
+          </thead>
+          <tbody>
+            {allRooms.map((room) => (
+              <tr key={room.room_code}>
+                <td>
+                  {room.room_code} — {room.room_name}
+                </td>
+                <td>{room.building_code}</td>
+                <td>
+                  {room.gateway_count === 0 ? (
+                    '-'
+                  ) : (
+                    <span
+                      className={`badge ${room.online_gateway_count > 0 ? 'badge-online' : 'badge-offline'}`}
+                    >
+                      {room.online_gateway_count}/{room.gateway_count} 온라인
+                    </span>
+                  )}
+                </td>
+                <td>{room.last_door_state ? DOOR_STATE_LABEL[room.last_door_state] : '-'}</td>
+                <td>
+                  {room.reported_lock_state ? (
+                    <span
+                      className={`badge ${room.reported_lock_state === 'unlocked' ? 'badge-online' : 'badge-offline'}`}
+                    >
+                      {LOCK_STATE_LABEL[room.reported_lock_state]}
+                    </span>
+                  ) : (
+                    '미보고'
+                  )}
+                </td>
               </tr>
             ))}
           </tbody>

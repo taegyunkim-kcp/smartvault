@@ -33,6 +33,8 @@ function SchedulePage() {
   const [doorState, setDoorState] = useState(null);
   const [reportedLockState, setReportedLockState] = useState(null);
   const [durationMinutes, setDurationMinutes] = useState(10);
+  const [allRooms, setAllRooms] = useState([]);
+  const [pendingScopeCode, setPendingScopeCode] = useState(null);
   const [error, setError] = useState(null);
   const [loading, setLoading] = useState(false);
   const [saving, setSaving] = useState(false);
@@ -41,11 +43,13 @@ function SchedulePage() {
     listTemplates()
       .then(setTemplates)
       .catch((err) => setError(err.message));
+    getRoomSummaries()
+      .then(setAllRooms)
+      .catch((err) => setError(err.message));
   }, []);
 
   useEffect(() => {
     async function resetAndLoadOptions() {
-      setScopeCode('');
       setDirectSchedule(null);
       setEffectivePolicy(null);
       setDoorState(null);
@@ -55,13 +59,30 @@ function SchedulePage() {
         const options =
           scopeType === 'base' ? await listBases() : scopeType === 'building' ? await listBuildings() : await listRooms();
         setScopeOptions(options);
+
+        if (scopeType === 'room' && pendingScopeCode && options.some((o) => o.room_code === pendingScopeCode)) {
+          setScopeCode(pendingScopeCode);
+        } else {
+          setScopeCode('');
+        }
+        setPendingScopeCode(null);
       } catch (err) {
         setError(err.message);
       }
     }
 
     resetAndLoadOptions();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [scopeType]);
+
+  function handleSelectRoomFromOverview(roomCode) {
+    if (scopeType === 'room') {
+      setScopeCode(roomCode);
+    } else {
+      setPendingScopeCode(roomCode);
+      setScopeType('room');
+    }
+  }
 
   useEffect(() => {
     if (!scopeCode) return;
@@ -197,6 +218,45 @@ function SchedulePage() {
 
       {error && <div className="banner-error">{error}</div>}
 
+      <h3 className="section-title">전체 내무반 현황</h3>
+      {allRooms.length === 0 ? (
+        <div className="empty-state">등록된 내무반이 없습니다.</div>
+      ) : (
+        <table className="data-table">
+          <thead>
+            <tr>
+              <th>내무반</th>
+              <th>소속 소대</th>
+              <th>문 상태</th>
+              <th>개폐 설정</th>
+            </tr>
+          </thead>
+          <tbody>
+            {allRooms.map((room) => (
+              <tr key={room.room_code} onClick={() => handleSelectRoomFromOverview(room.room_code)}>
+                <td>
+                  {room.room_code} — {room.room_name}
+                </td>
+                <td>{room.building_code}</td>
+                <td>{room.last_door_state ? DOOR_STATE_LABEL[room.last_door_state] : '-'}</td>
+                <td>
+                  {room.reported_lock_state ? (
+                    <span
+                      className={`badge ${room.reported_lock_state === 'unlocked' ? 'badge-online' : 'badge-offline'}`}
+                    >
+                      {LOCK_STATE_LABEL[room.reported_lock_state]}
+                    </span>
+                  ) : (
+                    '미보고'
+                  )}
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      )}
+
+      <h3 className="section-title">정책 편집</h3>
       <div className="page-toolbar">
         <select
           value={scopeType}
