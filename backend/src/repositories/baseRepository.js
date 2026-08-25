@@ -13,10 +13,10 @@ async function findById(baseCode) {
   return rows[0] || null;
 }
 
-async function create({ baseCode, baseName }) {
+async function create({ baseCode, baseName, parentOrgCode }) {
   await pool.execute(
-    'INSERT INTO bases (base_code, base_name) VALUES (:baseCode, :baseName)',
-    { baseCode, baseName }
+    'INSERT INTO bases (base_code, base_name, parent_org_code) VALUES (:baseCode, :baseName, :parentOrgCode)',
+    { baseCode, baseName, parentOrgCode: parentOrgCode || null }
   );
   return findById(baseCode);
 }

@@ -21,6 +21,31 @@ router.get('/', async (req, res) => {
   }
 });
 
+// GET /api/gateways/detected — 아직 등록되지 않은 채 이벤트만 보내온 게이트웨이 목록
+router.get('/detected', async (req, res) => {
+  try {
+    const detected = await gatewayService.listDetectedGateways();
+    res.json(detected);
+  } catch (err) {
+    handleError(res, err);
+  }
+});
+
+// POST /api/gateways/detected/:gatewayId/match — 내무반을 지정해 정식 등록
+router.post('/detected/:gatewayId/match', async (req, res) => {
+  try {
+    const { room_code, reader_count, firmware_version } = req.body;
+    const gateway = await gatewayService.matchDetectedGateway(req.params.gatewayId, {
+      roomCode: room_code,
+      readerCount: reader_count,
+      firmwareVersion: firmware_version,
+    });
+    res.status(201).json(gateway);
+  } catch (err) {
+    handleError(res, err);
+  }
+});
+
 router.get('/:gatewayId', async (req, res) => {
   try {
     const gateway = await gatewayService.getGateway(req.params.gatewayId);

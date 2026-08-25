@@ -1,4 +1,5 @@
 const gatewayRepository = require('../repositories/gatewayRepository');
+const detectedGatewayRepository = require('../repositories/detectedGatewayRepository');
 
 const GATEWAY_ID_MAX = 40;
 const ROOM_CODE_MAX = 30;
@@ -105,6 +106,16 @@ async function deleteGateway(gatewayId) {
   }
 }
 
+async function listDetectedGateways() {
+  return detectedGatewayRepository.findAll();
+}
+
+async function matchDetectedGateway(gatewayId, { roomCode, readerCount, firmwareVersion }) {
+  const gateway = await createGateway({ gatewayId, roomCode, readerCount, firmwareVersion });
+  await detectedGatewayRepository.remove(gatewayId);
+  return gateway;
+}
+
 module.exports = {
   ServiceError,
   listGateways,
@@ -112,4 +123,6 @@ module.exports = {
   createGateway,
   updateGateway,
   deleteGateway,
+  listDetectedGateways,
+  matchDetectedGateway,
 };

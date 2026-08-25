@@ -32,6 +32,9 @@ function mapDbError(err) {
   if (err.code === 'ER_DUP_ENTRY') {
     return new ServiceError('이미 존재하는 base_code입니다.', 409);
   }
+  if (err.code === 'ER_NO_REFERENCED_ROW_2' || err.code === 'ER_NO_REFERENCED_ROW') {
+    return new ServiceError('존재하지 않는 상위 조직 코드입니다.', 400);
+  }
   if (err.code === 'ER_ROW_IS_REFERENCED_2' || err.code === 'ER_ROW_IS_REFERENCED') {
     return new ServiceError('하위 건물이 있어 삭제할 수 없습니다.', 409);
   }

@@ -31,8 +31,12 @@ router.get('/:baseCode', async (req, res) => {
 
 router.post('/', async (req, res) => {
   try {
-    const { base_code, base_name } = req.body;
-    const base = await baseService.createBase({ baseCode: base_code, baseName: base_name });
+    const { base_code, base_name, parent_org_code } = req.body;
+    const base = await baseService.createBase({
+      baseCode: base_code,
+      baseName: base_name,
+      parentOrgCode: parent_org_code,
+    });
     res.status(201).json(base);
   } catch (err) {
     handleError(res, err);

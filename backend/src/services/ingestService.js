@@ -1,4 +1,5 @@
 const ingestRepository = require('../repositories/ingestRepository');
+const detectedGatewayRepository = require('../repositories/detectedGatewayRepository');
 
 class ServiceError extends Error {
   constructor(message, status) {
@@ -32,7 +33,13 @@ async function ingestEvents(events) {
   for (const event of events) {
     const occurredAt = event && event.occurred_at ? new Date(event.occurred_at) : new Date();
 
-    if (!isValidEventShape(event) || Number.isNaN(occurredAt.getTime()) || !existingGatewayIds.has(event.gateway_id)) {
+    if (!isValidEventShape(event) || Number.isNaN(occurredAt.getTime())) {
+      skipped += 1;
+      continue;
+    }
+
+    if (!existingGatewayIds.has(event.gateway_id)) {
+      await detectedGatewayRepository.upsertSeen(event.gateway_id);
       skipped += 1;
       continue;
     }

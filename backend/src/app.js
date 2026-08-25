@@ -30,6 +30,7 @@ app.get('/health', (req, res) => {
 });
 
 app.use('/api/dashboard', require('./routes/dashboard'));
+app.use('/api/org-groups', require('./routes/orgGroups'));
 app.use('/api/bases', require('./routes/bases'));
 app.use('/api/buildings', require('./routes/buildings'));
 app.use('/api/rooms', require('./routes/rooms'));
