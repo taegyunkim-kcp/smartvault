@@ -21,4 +21,16 @@ function isLocked({ effective_schedule: effectiveSchedule, active_override: acti
   return Boolean(slots[slotIndex]);
 }
 
-module.exports = { isLocked };
+function assertValidWeekSlots(weekSlots) {
+  if (!weekSlots || typeof weekSlots !== 'object') {
+    throw new Error('week_slots는 객체여야 합니다.');
+  }
+  for (const day of DAY_KEYS) {
+    const slots = weekSlots[day];
+    if (!Array.isArray(slots) || slots.length !== 48 || slots.some((v) => typeof v !== 'boolean')) {
+      throw new Error(`week_slots.${day}는 boolean 48개짜리 배열이어야 합니다.`);
+    }
+  }
+}
+
+module.exports = { DAY_KEYS, isLocked, assertValidWeekSlots };

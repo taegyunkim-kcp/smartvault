@@ -38,6 +38,9 @@ app.use('/api/personnel', require('./routes/personnel'));
 app.use('/api/rfid-tags', require('./routes/rfidTags'));
 app.use('/api/ingest', require('./routes/ingest'));
 app.use('/api/bridge', require('./routes/bridgePolicy'));
+app.use('/api/door-schedule-templates', require('./routes/doorScheduleTemplates'));
+app.use('/api/door-schedules', require('./routes/doorSchedules'));
+app.use('/api/door-overrides', require('./routes/doorOverrides'));
 
 const PORT = process.env.PORT || 4000;
 app.listen(PORT, () => {
