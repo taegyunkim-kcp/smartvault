@@ -152,28 +152,37 @@ function DashboardBasesPage() {
               <th>중대</th>
               <th>소대 수</th>
               <th>게이트웨이</th>
+              <th>등록</th>
+              <th>보관중</th>
+              <th>부재</th>
               <th>최근 24시간 이벤트</th>
             </tr>
           </thead>
           <tbody>
-            {bases.map((base) => (
-              <tr key={base.base_code} onClick={() => navigate(`/dashboard/${base.base_code}`)}>
-                <td>
-                  {base.base_code} — {base.base_name}
-                </td>
-                <td>{base.building_count}</td>
-                <td>
-                  {base.gateway_count === 0 ? (
-                    '-'
-                  ) : (
-                    <span className={`badge ${base.online_gateway_count > 0 ? 'badge-online' : 'badge-offline'}`}>
-                      {base.online_gateway_count}/{base.gateway_count} 온라인
-                    </span>
-                  )}
-                </td>
-                <td>{base.event_count_24h}건</td>
-              </tr>
-            ))}
+            {bases.map((base) => {
+              const baseStatus = personnelStatus?.by_base?.[base.base_code];
+              return (
+                <tr key={base.base_code} onClick={() => navigate(`/dashboard/${base.base_code}`)}>
+                  <td>
+                    {base.base_code} — {base.base_name}
+                  </td>
+                  <td>{base.building_count}</td>
+                  <td>
+                    {base.gateway_count === 0 ? (
+                      '-'
+                    ) : (
+                      <span className={`badge ${base.online_gateway_count > 0 ? 'badge-online' : 'badge-offline'}`}>
+                        {base.online_gateway_count}/{base.gateway_count} 온라인
+                      </span>
+                    )}
+                  </td>
+                  <td>{baseStatus?.registered ?? 0}</td>
+                  <td>{baseStatus?.present ?? 0}</td>
+                  <td>{baseStatus?.absent ?? 0}</td>
+                  <td>{base.event_count_24h}건</td>
+                </tr>
+              );
+            })}
           </tbody>
         </table>
       )}
