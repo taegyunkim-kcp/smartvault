@@ -1,0 +1,299 @@
+import { useEffect, useState } from 'react';
+import { Link } from 'react-router-dom';
+import { listBases } from '../../api/bases';
+import { listBuildings } from '../../api/buildings';
+import { listRooms } from '../../api/rooms';
+import { listTemplates } from '../../api/doorScheduleTemplates';
+import {
+  deleteSchedule,
+  getEffectivePolicy,
+  getSchedule,
+  resetFromTemplate,
+  saveSchedule,
+} from '../../api/doorSchedules';
+import { createOverride, cancelOverride } from '../../api/doorOverrides';
+import { getRoomSummaries } from '../../api/dashboard';
+import WeekSlotGrid from '../../components/WeekSlotGrid';
+import { emptyWeekSlots } from '../../components/weekSlots';
+import '../../styles/crud.css';
+
+const SCOPE_TYPE_LABELS = { base: '중대', building: '소대', room: '내무반' };
+const DOOR_STATE_LABEL = { open: '열림', closed: '닫힘' };
+
+function SchedulePage() {
+  const [scopeType, setScopeType] = useState('room');
+  const [scopeOptions, setScopeOptions] = useState([]);
+  const [scopeCode, setScopeCode] = useState('');
+  const [templates, setTemplates] = useState([]);
+  const [selectedTemplate, setSelectedTemplate] = useState('');
+  const [directSchedule, setDirectSchedule] = useState(null);
+  const [weekSlots, setWeekSlots] = useState(emptyWeekSlots());
+  const [effectivePolicy, setEffectivePolicy] = useState(null);
+  const [doorState, setDoorState] = useState(null);
+  const [durationMinutes, setDurationMinutes] = useState(10);
+  const [error, setError] = useState(null);
+  const [loading, setLoading] = useState(false);
+  const [saving, setSaving] = useState(false);
+
+  useEffect(() => {
+    listTemplates()
+      .then(setTemplates)
+      .catch((err) => setError(err.message));
+  }, []);
+
+  useEffect(() => {
+    async function resetAndLoadOptions() {
+      setScopeCode('');
+      setDirectSchedule(null);
+      setEffectivePolicy(null);
+      setDoorState(null);
+
+      try {
+        const options =
+          scopeType === 'base' ? await listBases() : scopeType === 'building' ? await listBuildings() : await listRooms();
+        setScopeOptions(options);
+      } catch (err) {
+        setError(err.message);
+      }
+    }
+
+    resetAndLoadOptions();
+  }, [scopeType]);
+
+  useEffect(() => {
+    if (!scopeCode) return;
+
+    async function load() {
+      setLoading(true);
+      setError(null);
+      try {
+        const schedule = await getSchedule(scopeType, scopeCode);
+        setDirectSchedule(schedule);
+        setWeekSlots(schedule ? schedule.week_slots : emptyWeekSlots());
+
+        if (scopeType === 'room') {
+          const policy = await getEffectivePolicy(scopeCode);
+          setEffectivePolicy(policy);
+
+          const room = scopeOptions.find((r) => r.room_code === scopeCode);
+          if (room) {
+            const roomSummaries = await getRoomSummaries(room.building_code);
+            const summary = roomSummaries.find((r) => r.room_code === scopeCode);
+            setDoorState(summary ? summary.last_door_state : null);
+          }
+        } else {
+          setEffectivePolicy(null);
+          setDoorState(null);
+        }
+      } catch (err) {
+        setError(err.message);
+      } finally {
+        setLoading(false);
+      }
+    }
+
+    load();
+  }, [scopeType, scopeCode, scopeOptions]);
+
+  async function refreshScopeData() {
+    const schedule = await getSchedule(scopeType, scopeCode);
+    setDirectSchedule(schedule);
+    setWeekSlots(schedule ? schedule.week_slots : emptyWeekSlots());
+    if (scopeType === 'room') {
+      setEffectivePolicy(await getEffectivePolicy(scopeCode));
+    }
+  }
+
+  async function handleSave() {
+    setSaving(true);
+    setError(null);
+    try {
+      await saveSchedule(scopeType, scopeCode, weekSlots, directSchedule?.based_on_template);
+      await refreshScopeData();
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setSaving(false);
+    }
+  }
+
+  async function handleResetFromTemplate() {
+    if (!selectedTemplate) return;
+    setSaving(true);
+    setError(null);
+    try {
+      await resetFromTemplate(scopeType, scopeCode, selectedTemplate);
+      await refreshScopeData();
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setSaving(false);
+    }
+  }
+
+  async function handleDeleteDirect() {
+    if (!window.confirm('이 스코프의 직접 설정을 삭제하고 상위 상속으로 되돌리시겠습니까?')) return;
+    setSaving(true);
+    setError(null);
+    try {
+      await deleteSchedule(scopeType, scopeCode);
+      await refreshScopeData();
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setSaving(false);
+    }
+  }
+
+  async function handleCreateOverride() {
+    setSaving(true);
+    setError(null);
+    try {
+      await createOverride(scopeCode, Number(durationMinutes));
+      setEffectivePolicy(await getEffectivePolicy(scopeCode));
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setSaving(false);
+    }
+  }
+
+  async function handleCancelOverride() {
+    if (!effectivePolicy?.active_override) return;
+    setSaving(true);
+    setError(null);
+    try {
+      await cancelOverride(effectivePolicy.active_override.id);
+      setEffectivePolicy(await getEffectivePolicy(scopeCode));
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setSaving(false);
+    }
+  }
+
+  const optionLabel = (option) => {
+    if (scopeType === 'base') return `${option.base_code} — ${option.base_name}`;
+    if (scopeType === 'building') return `${option.building_code} — ${option.building_name}`;
+    return `${option.room_code} — ${option.room_name || '(이름 없음)'}`;
+  };
+  const optionCode = (option) => {
+    if (scopeType === 'base') return option.base_code;
+    if (scopeType === 'building') return option.building_code;
+    return option.room_code;
+  };
+
+  return (
+    <div>
+      <h2>개폐 시간표 관리</h2>
+      <p className="breadcrumb">
+        정책 템플릿은 <Link to="/schedule-templates">여기서</Link> 미리 만들어 두면 환원 시 선택할 수 있습니다.
+      </p>
+
+      {error && <div className="banner-error">{error}</div>}
+
+      <div className="page-toolbar">
+        <select
+          value={scopeType}
+          onChange={(e) => setScopeType(e.target.value)}
+        >
+          <option value="base">중대 단위</option>
+          <option value="building">소대 단위</option>
+          <option value="room">내무반 단위</option>
+        </select>
+        <select value={scopeCode} onChange={(e) => setScopeCode(e.target.value)}>
+          <option value="">{SCOPE_TYPE_LABELS[scopeType]} 선택</option>
+          {scopeOptions.map((option) => (
+            <option key={optionCode(option)} value={optionCode(option)}>
+              {optionLabel(option)}
+            </option>
+          ))}
+        </select>
+      </div>
+
+      {loading && <p>불러오는 중...</p>}
+
+      {!loading && scopeCode && (
+        <>
+          {scopeType === 'room' && (
+            <div className="page-toolbar">
+              <span>
+                현재 적용 정책:{' '}
+                {effectivePolicy?.effective_schedule
+                  ? `${effectivePolicy.effective_schedule.scope_type}(${effectivePolicy.effective_schedule.scope_code})에서 상속`
+                  : '없음'}
+              </span>
+              <span className="spacer" />
+              <span>
+                실제 도어 상태:{' '}
+                <span className={`badge ${doorState === 'open' ? 'badge-online' : 'badge-offline'}`}>
+                  {doorState ? DOOR_STATE_LABEL[doorState] : '기록 없음'}
+                </span>
+              </span>
+            </div>
+          )}
+
+          <h3 className="section-title">
+            {SCOPE_TYPE_LABELS[scopeType]} 직접 설정 {directSchedule ? '' : '(현재 없음 — 상위 상속 적용 중)'}
+          </h3>
+          <WeekSlotGrid value={weekSlots} onChange={setWeekSlots} />
+
+          <div className="form-actions">
+            <button type="button" className="primary" disabled={saving} onClick={handleSave}>
+              저장 (실시간 설정)
+            </button>
+            <select value={selectedTemplate} onChange={(e) => setSelectedTemplate(e.target.value)}>
+              <option value="">템플릿 선택</option>
+              {templates.map((t) => (
+                <option key={t.template_code} value={t.template_code}>
+                  {t.template_code} — {t.template_name}
+                </option>
+              ))}
+            </select>
+            <button type="button" disabled={saving || !selectedTemplate} onClick={handleResetFromTemplate}>
+              기본 정책으로 환원
+            </button>
+            {directSchedule && (
+              <button type="button" disabled={saving} onClick={handleDeleteDirect}>
+                직접 설정 삭제
+              </button>
+            )}
+          </div>
+
+          {scopeType === 'room' && (
+            <>
+              <h3 className="section-title">즉각 실행</h3>
+              {effectivePolicy?.active_override ? (
+                <div className="page-toolbar">
+                  <span>
+                    활성 즉각 개방 — {effectivePolicy.active_override.expires_at}까지
+                  </span>
+                  <button type="button" disabled={saving} onClick={handleCancelOverride}>
+                    취소
+                  </button>
+                </div>
+              ) : (
+                <div className="page-toolbar">
+                  <input
+                    type="number"
+                    min="1"
+                    max="30"
+                    value={durationMinutes}
+                    onChange={(e) => setDurationMinutes(e.target.value)}
+                    style={{ width: 80 }}
+                  />
+                  <span>분 동안</span>
+                  <button type="button" className="primary" disabled={saving} onClick={handleCreateOverride}>
+                    즉시 개방
+                  </button>
+                </div>
+              )}
+            </>
+          )}
+        </>
+      )}
+    </div>
+  );
+}
+
+export default SchedulePage;

@@ -20,6 +20,7 @@ const NAV_GROUPS = [
       { label: '사용자 등록', to: '/personnel' },
       { label: 'RFID 매칭', to: '/personnel/match' },
       { label: '개폐 시간표 관리', to: '/schedules' },
+      { label: '정책 템플릿 관리', to: '/schedule-templates' },
     ],
   },
 ];

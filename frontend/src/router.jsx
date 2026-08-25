@@ -15,6 +15,9 @@ import DashboardRoomsPage from './pages/dashboard/DashboardRoomsPage';
 import PersonnelListPage from './pages/personnel/PersonnelListPage';
 import PersonnelFormPage from './pages/personnel/PersonnelFormPage';
 import PersonnelMatchPage from './pages/personnel/PersonnelMatchPage';
+import TemplateListPage from './pages/schedules/TemplateListPage';
+import TemplateFormPage from './pages/schedules/TemplateFormPage';
+import SchedulePage from './pages/schedules/SchedulePage';
 
 const router = createBrowserRouter([
   {
@@ -41,7 +44,10 @@ const router = createBrowserRouter([
       { path: 'personnel/new', element: <PersonnelFormPage /> },
       { path: 'personnel/match', element: <PersonnelMatchPage /> },
       { path: 'personnel/:serviceNumber/edit', element: <PersonnelFormPage /> },
-      { path: 'schedules', element: <ComingSoonPage title="개폐 시간표 관리" /> },
+      { path: 'schedule-templates', element: <TemplateListPage /> },
+      { path: 'schedule-templates/new', element: <TemplateFormPage /> },
+      { path: 'schedule-templates/:templateCode/edit', element: <TemplateFormPage /> },
+      { path: 'schedules', element: <SchedulePage /> },
     ],
   },
 ]);
