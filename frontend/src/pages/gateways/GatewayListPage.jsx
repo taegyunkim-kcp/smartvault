@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { listGateways, deleteGateway } from '../../api/gateways';
 import { listRooms } from '../../api/rooms';
+import { formatDateTime } from '../../utils/formatDateTime';
 import '../../styles/crud.css';
 
 const LOCK_STATE_LABELS = { locked: '잠김', unlocked: '열림 허용' };
@@ -100,7 +101,7 @@ function GatewayListPage() {
                 <td>{gw.room_code}</td>
                 <td>{gw.reader_count}</td>
                 <td>{gw.firmware_version || '-'}</td>
-                <td>{gw.last_seen_at || '-'}</td>
+                <td>{gw.last_seen_at ? formatDateTime(gw.last_seen_at) : '-'}</td>
                 <td>{LOCK_STATE_LABELS[gw.reported_lock_state] || '미보고'}</td>
                 <td className="actions">
                   <button type="button" onClick={(e) => handleDelete(e, gw.gateway_id)}>

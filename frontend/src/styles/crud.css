@@ -147,6 +147,19 @@
   text-decoration: underline;
 }
 
+.link-button {
+  background: none;
+  border: none;
+  padding: 0;
+  color: var(--accent);
+  cursor: pointer;
+  font-size: inherit;
+}
+
+.link-button:hover {
+  text-decoration: underline;
+}
+
 .empty-state {
   padding: 24px 0;
   font-size: 13px;

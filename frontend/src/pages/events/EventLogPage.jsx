@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { listDoorEvents, listRfidEvents, listStatusEvents } from '../../api/events';
 import { listRooms } from '../../api/rooms';
+import { formatDateTime } from '../../utils/formatDateTime';
 import '../../styles/crud.css';
 
 const TABS = [
@@ -156,7 +157,7 @@ function EventLogPage() {
             )}
             {items.map((item) => (
               <tr key={item.id}>
-                <td>{item.occurred_at}</td>
+                <td>{formatDateTime(item.occurred_at)}</td>
                 <td>{item.room_code}</td>
                 <td>{item.gateway_id}</td>
                 <td>{item.reader_index}</td>
@@ -186,7 +187,7 @@ function EventLogPage() {
             )}
             {items.map((item) => (
               <tr key={item.id}>
-                <td>{item.occurred_at}</td>
+                <td>{formatDateTime(item.occurred_at)}</td>
                 <td>{item.room_code}</td>
                 <td>{item.gateway_id}</td>
                 <td>{DOOR_STATE_LABELS[item.door_state] || item.door_state}</td>
@@ -214,7 +215,7 @@ function EventLogPage() {
             )}
             {items.map((item) => (
               <tr key={item.id}>
-                <td>{item.occurred_at}</td>
+                <td>{formatDateTime(item.occurred_at)}</td>
                 <td>{STATUS_TYPE_LABELS[item.status_type] || item.status_type}</td>
                 <td>{item.service_number || item.rfid_uid}</td>
                 <td>{item.room_code || '-'}</td>

@@ -4,23 +4,29 @@ import { NavLink } from 'react-router-dom';
 const NAV_GROUPS = [
   {
     title: '모니터링',
-    items: [{ label: '전체 현황', to: '/' }],
+    items: [
+      { label: '전체', to: '/' },
+      { label: '중대별', to: '/dashboard/by-base' },
+      { label: '내무반별', to: '/dashboard/by-room' },
+    ],
   },
   {
     title: '이벤트 처리',
     items: [{ label: '이벤트 로그', to: '/events' }],
   },
+  { label: '보관함 개폐 관리/제어', to: '/schedules' },
   {
-    title: '등록 및 관리',
+    title: '사용자/RFID 등록',
     items: [
-      { label: '중대 관리', to: '/bases' },
-      { label: '소대 관리', to: '/buildings' },
-      { label: '내무반 관리', to: '/rooms' },
-      { label: '게이트웨이 관리', to: '/gateways' },
       { label: '사용자 등록', to: '/personnel' },
-      { label: 'RFID 매칭', to: '/personnel/match' },
-      { label: '개폐 시간표 관리', to: '/schedules' },
-      { label: '정책 템플릿 관리', to: '/schedule-templates' },
+      { label: 'RFID 등록', to: '/personnel/match' },
+    ],
+  },
+  {
+    title: '환경 설정',
+    items: [
+      { label: '조직 구성', to: '/bases' },
+      { label: '게이트웨이 등록', to: '/gateways' },
     ],
   },
 ];
@@ -51,12 +57,26 @@ function SidebarGroup({ title, items }) {
   );
 }
 
+function SidebarFlatLink({ label, to }) {
+  return (
+    <div className="sidebar-group">
+      <NavLink to={to} className={({ isActive }) => `sidebar-flat-link${isActive ? ' active' : ''}`}>
+        {label}
+      </NavLink>
+    </div>
+  );
+}
+
 function Sidebar() {
   return (
     <nav className="app-sidebar">
-      {NAV_GROUPS.map((group) => (
-        <SidebarGroup key={group.title} title={group.title} items={group.items} />
-      ))}
+      {NAV_GROUPS.map((entry) =>
+        entry.items ? (
+          <SidebarGroup key={entry.title} title={entry.title} items={entry.items} />
+        ) : (
+          <SidebarFlatLink key={entry.to} label={entry.label} to={entry.to} />
+        )
+      )}
     </nav>
   );
 }

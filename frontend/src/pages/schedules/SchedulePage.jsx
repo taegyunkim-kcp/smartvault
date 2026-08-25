@@ -1,5 +1,4 @@
 import { useEffect, useState } from 'react';
-import { Link } from 'react-router-dom';
 import { listBases } from '../../api/bases';
 import { listBuildings } from '../../api/buildings';
 import { listRooms } from '../../api/rooms';
@@ -15,7 +14,9 @@ import { createOverride, cancelOverride } from '../../api/doorOverrides';
 import { getRoomSummaries } from '../../api/dashboard';
 import WeekSlotGrid from '../../components/WeekSlotGrid';
 import RoomStatusGrid from '../../components/RoomStatusGrid';
+import TemplateManagerModal from '../../components/TemplateManagerModal';
 import { emptyWeekSlots } from '../../components/weekSlots';
+import { formatDateTime } from '../../utils/formatDateTime';
 import '../../styles/crud.css';
 
 const SCOPE_TYPE_LABELS = { base: '중대', building: '소대', room: '내무반' };
@@ -36,6 +37,7 @@ function SchedulePage() {
   const [durationMinutes, setDurationMinutes] = useState(10);
   const [allRooms, setAllRooms] = useState([]);
   const [pendingScopeCode, setPendingScopeCode] = useState(null);
+  const [showTemplateModal, setShowTemplateModal] = useState(false);
   const [error, setError] = useState(null);
   const [loading, setLoading] = useState(false);
   const [saving, setSaving] = useState(false);
@@ -48,6 +50,15 @@ function SchedulePage() {
       .then(setAllRooms)
       .catch((err) => setError(err.message));
   }, []);
+
+  function handleCloseTemplateModal(changed) {
+    setShowTemplateModal(false);
+    if (changed) {
+      listTemplates()
+        .then(setTemplates)
+        .catch((err) => setError(err.message));
+    }
+  }
 
   useEffect(() => {
     async function resetAndLoadOptions() {
@@ -212,9 +223,13 @@ function SchedulePage() {
 
   return (
     <div>
-      <h2>개폐 시간표 관리</h2>
+      <h2>보관함 개폐 관리/제어</h2>
       <p className="breadcrumb">
-        정책 템플릿은 <Link to="/schedule-templates">여기서</Link> 미리 만들어 두면 환원 시 선택할 수 있습니다.
+        정책 템플릿은{' '}
+        <button type="button" className="link-button" onClick={() => setShowTemplateModal(true)}>
+          여기서
+        </button>{' '}
+        미리 만들어 두면 환원 시 선택할 수 있습니다.
       </p>
 
       {error && <div className="banner-error">{error}</div>}
@@ -308,7 +323,7 @@ function SchedulePage() {
               {effectivePolicy?.active_override ? (
                 <div className="page-toolbar">
                   <span>
-                    활성 즉각 개방 — {effectivePolicy.active_override.expires_at}까지
+                    활성 즉각 개방 — {formatDateTime(effectivePolicy.active_override.expires_at)}까지
                   </span>
                   <button type="button" disabled={saving} onClick={handleCancelOverride}>
                     취소
@@ -334,6 +349,8 @@ function SchedulePage() {
           )}
         </>
       )}
+
+      {showTemplateModal && <TemplateManagerModal onClose={handleCloseTemplateModal} />}
     </div>
   );
 }

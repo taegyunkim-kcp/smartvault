@@ -52,6 +52,24 @@
   flex-direction: column;
 }
 
+.sidebar-flat-link {
+  display: block;
+  padding: 10px 20px;
+  font-size: 13px;
+  font-weight: 600;
+  text-decoration: none;
+  color: var(--text-h);
+}
+
+.sidebar-flat-link:hover {
+  background: var(--bg-subtle);
+}
+
+.sidebar-flat-link.active {
+  color: var(--accent);
+  background: var(--accent-bg);
+}
+
 .sidebar-link {
   padding: 8px 20px 8px 32px;
   font-size: 13px;

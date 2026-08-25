@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { getBaseSummaries, getPersonnelStatus, getRoomSummaries } from '../../api/dashboard';
 import RoomStatusGrid from '../../components/RoomStatusGrid';
+import { formatDateTime } from '../../utils/formatDateTime';
 import '../../styles/crud.css';
 
 const STATUS_LABELS = {
@@ -130,7 +131,7 @@ function DashboardBasesPage() {
                     <td>{tag.rfid_uid}</td>
                     <td>{tag.room_code}</td>
                     <td>{tag.gateway_id}</td>
-                    <td>{tag.last_seen_at}</td>
+                    <td>{formatDateTime(tag.last_seen_at)}</td>
                   </tr>
                 ))}
               </tbody>
@@ -162,7 +163,7 @@ function DashboardBasesPage() {
             {bases.map((base) => {
               const baseStatus = personnelStatus?.by_base?.[base.base_code];
               return (
-                <tr key={base.base_code} onClick={() => navigate(`/dashboard/${base.base_code}`)}>
+                <tr key={base.base_code} onClick={() => navigate(`/dashboard/by-base/${base.base_code}`)}>
                   <td>
                     {base.base_code} — {base.base_name}
                   </td>
@@ -188,7 +189,7 @@ function DashboardBasesPage() {
       )}
 
       <h3 className="section-title">전체 내무반 개폐 상태</h3>
-      <RoomStatusGrid rooms={allRooms} />
+      <RoomStatusGrid rooms={allRooms} onSelectRoom={(code) => navigate(`/dashboard/by-room/${code}`)} />
 
       {personnelStatus && (
         <>
@@ -213,7 +214,7 @@ function DashboardBasesPage() {
                   <td>{STATUS_LABELS[event.status_type] || event.status_type}</td>
                   <td>{event.service_number || event.rfid_uid}</td>
                   <td>{event.room_code || '-'}</td>
-                  <td>{event.occurred_at}</td>
+                  <td>{formatDateTime(event.occurred_at)}</td>
                 </tr>
               ))}
             </tbody>

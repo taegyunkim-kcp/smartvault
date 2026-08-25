@@ -9,13 +9,11 @@ import BuildingFormPage from './pages/buildings/BuildingFormPage';
 import RoomListPage from './pages/rooms/RoomListPage';
 import RoomFormPage from './pages/rooms/RoomFormPage';
 import DashboardBasesPage from './pages/dashboard/DashboardBasesPage';
-import DashboardBuildingsPage from './pages/dashboard/DashboardBuildingsPage';
-import DashboardRoomsPage from './pages/dashboard/DashboardRoomsPage';
+import DashboardByBasePage from './pages/dashboard/DashboardByBasePage';
+import DashboardByRoomPage from './pages/dashboard/DashboardByRoomPage';
 import PersonnelListPage from './pages/personnel/PersonnelListPage';
 import PersonnelFormPage from './pages/personnel/PersonnelFormPage';
 import PersonnelMatchPage from './pages/personnel/PersonnelMatchPage';
-import TemplateListPage from './pages/schedules/TemplateListPage';
-import TemplateFormPage from './pages/schedules/TemplateFormPage';
 import SchedulePage from './pages/schedules/SchedulePage';
 import EventLogPage from './pages/events/EventLogPage';
 
@@ -25,8 +23,10 @@ const router = createBrowserRouter([
     element: <AppLayout />,
     children: [
       { index: true, element: <DashboardBasesPage /> },
-      { path: 'dashboard/:baseCode', element: <DashboardBuildingsPage /> },
-      { path: 'dashboard/:baseCode/:buildingCode', element: <DashboardRoomsPage /> },
+      { path: 'dashboard/by-base', element: <DashboardByBasePage /> },
+      { path: 'dashboard/by-base/:baseCode', element: <DashboardByBasePage /> },
+      { path: 'dashboard/by-room', element: <DashboardByRoomPage /> },
+      { path: 'dashboard/by-room/:roomCode', element: <DashboardByRoomPage /> },
       { path: 'events', element: <EventLogPage /> },
       { path: 'gateways', element: <GatewayListPage /> },
       { path: 'gateways/new', element: <GatewayFormPage /> },
@@ -44,9 +44,6 @@ const router = createBrowserRouter([
       { path: 'personnel/new', element: <PersonnelFormPage /> },
       { path: 'personnel/match', element: <PersonnelMatchPage /> },
       { path: 'personnel/:serviceNumber/edit', element: <PersonnelFormPage /> },
-      { path: 'schedule-templates', element: <TemplateListPage /> },
-      { path: 'schedule-templates/new', element: <TemplateFormPage /> },
-      { path: 'schedule-templates/:templateCode/edit', element: <TemplateFormPage /> },
       { path: 'schedules', element: <SchedulePage /> },
     ],
   },
