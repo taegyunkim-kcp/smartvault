@@ -14,4 +14,8 @@ function getRoomSummaries(buildingCode) {
   return request(`/api/dashboard/rooms${query}`);
 }
 
-export { getBaseSummaries, getBuildingSummaries, getRoomSummaries };
+function getPersonnelStatus() {
+  return request('/api/dashboard/personnel-status');
+}
+
+export { getBaseSummaries, getBuildingSummaries, getRoomSummaries, getPersonnelStatus };

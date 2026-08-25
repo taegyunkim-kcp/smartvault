@@ -195,3 +195,44 @@
   border-color: var(--accent);
   background: var(--accent-bg);
 }
+
+.stat-cards {
+  display: grid;
+  grid-template-columns: repeat(6, minmax(0, 1fr));
+  gap: 10px;
+  margin-bottom: 20px;
+}
+
+.stat-card {
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 12px 14px;
+  background: var(--bg);
+  cursor: pointer;
+  text-align: left;
+}
+
+.stat-card.selected {
+  border-color: var(--accent);
+  background: var(--accent-bg);
+}
+
+.stat-card .stat-label {
+  font-size: 12px;
+  opacity: 0.7;
+  margin-bottom: 4px;
+}
+
+.stat-card .stat-value {
+  font-size: 22px;
+  font-weight: 700;
+}
+
+.stat-card.stat-warn .stat-value {
+  color: var(--danger);
+}
+
+.section-title {
+  font-size: 15px;
+  margin: 24px 0 8px;
+}
