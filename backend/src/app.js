@@ -34,6 +34,8 @@ app.use('/api/bases', require('./routes/bases'));
 app.use('/api/buildings', require('./routes/buildings'));
 app.use('/api/rooms', require('./routes/rooms'));
 app.use('/api/gateways', require('./routes/gateways'));
+app.use('/api/personnel', require('./routes/personnel'));
+app.use('/api/rfid-tags', require('./routes/rfidTags'));
 app.use('/api/ingest', require('./routes/ingest'));
 app.use('/api/bridge', require('./routes/bridgePolicy'));
 
