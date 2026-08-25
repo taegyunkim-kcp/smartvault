@@ -1,16 +1,17 @@
-# 개발 환경 구축 가이드 (Windows, 개발+운영 한 PC)
+# 개발 환경 구축 가이드 (Windows, 다른 PC에서 동일하게 세팅하기)
 
-전제: 이 PC는 지금 인터넷이 됩니다. 실제 부대 폐쇄망 배치는 이후 별도 단계/별도 PC에서 진행합니다.
-그래서 지금은 일반적인 온라인 설치 방식(winget/설치파일)을 그대로 씁니다.
+이 레포는 GitHub(`https://github.com/taegyunkim-kcp/smartvault`)에 올라가 있으므로, 새 PC에서는
+"레포를 처음부터 만드는 것"이 아니라 **클론해서 세팅**하면 됩니다. 인터넷이 되는 일반 PC 기준(winget/설치파일)
+설치 절차입니다 — 실제 부대 폐쇄망 배치는 별도 단계/별도 PC에서 진행합니다.
 
 ## 0. 설치 순서 요약
 
 1. Git for Windows
-2. Claude Code (네이티브 설치)
-3. Node.js LTS
-4. Python 3.x
-5. Docker Desktop (WSL2 백엔드) — 개발/운영 DB를 컨테이너로 분리
-6. (선택) VS Code — Claude Code와 병행 사용 가능
+2. VS Code
+3. Claude Code (네이티브 설치 + VS Code 확장)
+4. Node.js LTS
+5. Python 3.x
+6. Docker Desktop (WSL2 백엔드) — 개발/운영 DB를 컨테이너로 분리
 
 ---
 
@@ -19,7 +20,12 @@
 https://git-scm.com/download/win 에서 설치. 기본 옵션 그대로 진행해도 됩니다.
 Claude Code가 Windows 네이티브 셸에서 Bash 도구를 쓰려면 Git for Windows가 필요합니다.
 
-## 2. Claude Code 설치
+## 2. VS Code
+
+https://code.visualstudio.com/ 에서 설치. 기본 옵션 그대로 진행하면 됩니다.
+(에디터는 필수는 아니지만, 아래 Claude Code VS Code 확장을 쓰려면 먼저 설치돼 있어야 합니다.)
+
+## 3. Claude Code 설치
 
 PowerShell을 **관리자 권한 아닐 필요 없음**, 그냥 일반 PowerShell 열어서:
 
@@ -35,7 +41,11 @@ claude doctor
 
 로 정상 설치를 확인합니다. Claude Pro/Max/Team/Enterprise 계정 또는 Console(API) 계정이 필요합니다.
 
-## 3. Node.js LTS
+**VS Code 확장(선택, 권장)**: VS Code Extensions 마켓플레이스에서 "Claude Code" 검색해 설치하면
+VS Code 통합 터미널/사이드바에서 바로 Claude Code를 띄울 수 있습니다. 확장 없이도 `claude`는
+VS Code의 통합 터미널에서 그냥 실행하면 자동으로 IDE 연동(열린 파일·선택 영역 인식 등)이 됩니다.
+
+## 4. Node.js LTS
 
 https://nodejs.org 에서 LTS 버전 설치 (백엔드 Express, 프론트엔드 React 빌드에 필요).
 설치 후 확인:
@@ -45,7 +55,7 @@ node -v
 npm -v
 ```
 
-## 4. Python 3.x
+## 5. Python 3.x
 
 https://www.python.org/downloads/windows/ 에서 설치. **설치 시 "Add python.exe to PATH" 체크 필수** (게이트웨이 브리지 실행에 필요).
 
@@ -53,7 +63,7 @@ https://www.python.org/downloads/windows/ 에서 설치. **설치 시 "Add pytho
 python --version
 ```
 
-## 5. Docker Desktop
+## 6. Docker Desktop
 
 https://www.docker.com/products/docker-desktop/ 에서 설치, WSL2 백엔드로 설정.
 설치 이유: 개발용 DB와 운영용 DB를 완전히 분리된 컨테이너로 띄워서, 개발 중 실수로 운영 데이터를 건드릴 위험을 원천 차단합니다.
@@ -65,34 +75,44 @@ docker compose version
 
 ---
 
-## 6. 레포 초기 설정
+## 7. 레포 클론 + 초기 설정
 
-압축 해제한 `smartvault/` 폴더를 원하는 위치에 둡니다 (예: `C:\dev\smartvault`).
+원하는 위치에 GitHub에서 클론합니다 (예: `C:\dev\smartvault`).
 
 ```powershell
-cd C:\dev\smartvault
-git init
-git add .
-git commit -m "init: 프로젝트 스캐폴드"
+cd C:\dev
+git clone https://github.com/taegyunkim-kcp/smartvault.git
+cd smartvault
 ```
+
+**`.env.*` 파일은 git에 안 올라가 있습니다**(`.gitignore`에 포함, 시크릿이라 의도적으로 제외). 새 PC에서는
+아래처럼 `.env.example`을 복사해서 새로 채워야 합니다 — 기존 PC의 값을 그대로 옮길 필요는 없고,
+새 값(특히 `JWT_SECRET`)을 새로 생성해도 됩니다. 개발용 DB 비밀번호만 `docker-compose.dev.yml`에 적힌
+값과 일치시키면 됩니다.
 
 ### 백엔드
 
 ```powershell
 cd backend
 copy .env.example .env.development
-# .env.development 파일을 열어서 DB_PASSWORD, JWT_SECRET, BRIDGE_API_KEYS 값을 실제 값으로 채우세요.
+# .env.development 파일을 열어서 DB_PASSWORD, JWT_SECRET, BRIDGE_API_KEYS 값을 채우세요.
+# DB_PASSWORD는 docker-compose.dev.yml의 MYSQL_PASSWORD와 동일해야 합니다.
 npm install
 ```
 
 ### 프론트엔드
 
-`frontend/README.md`의 안내대로 Vite 프로젝트를 생성합니다.
+```powershell
+cd ../frontend
+copy .env.example .env.development
+# VITE_API_BASE_URL=http://localhost:4000 그대로 두면 됩니다(백엔드 개발 포트).
+npm install
+```
 
 ### 게이트웨이 브리지
 
 ```powershell
-cd gateway-bridge
+cd ../gateway-bridge
 python -m venv venv
 venv\Scripts\activate
 pip install -r requirements.txt
@@ -102,15 +122,20 @@ copy .env.example .env
 
 ---
 
-## 7. 개발 모드로 띄우기
+## 8. 개발 모드로 띄우기
 
 ```powershell
 # 1) 개발용 DB 컨테이너 기동
 cd C:\dev\smartvault
 docker compose -f docker-compose.dev.yml up -d
 
-# 2) 스키마 적용 (최초 1회 및 마이그레이션 추가 시)
-docker exec -i smartvault-dev-db mysql -u smartvault_dev -pdevpass_change_me smartvault_dev < backend\migrations\001_init.sql
+# 2) 스키마 적용 (최초 1회 — migrations 폴더의 파일을 번호 순서대로 전부 적용)
+docker exec -i smartvault-dev-db mysql -u smartvault_dev -pktg0506@! smartvault_dev < backend\migrations\001_init.sql
+docker exec -i smartvault-dev-db mysql -u smartvault_dev -pktg0506@! smartvault_dev < backend\migrations\002_personnel_and_door_control.sql
+docker exec -i smartvault-dev-db mysql -u smartvault_dev -pktg0506@! smartvault_dev < backend\migrations\003_gateway_reported_lock_state.sql
+docker exec -i smartvault-dev-db mysql -u smartvault_dev -pktg0506@! smartvault_dev < backend\migrations\004_org_groups.sql
+docker exec -i smartvault-dev-db mysql -u smartvault_dev -pktg0506@! smartvault_dev < backend\migrations\005_detected_gateways.sql
+# 이후 새 마이그레이션이 추가되면 같은 방식으로 번호 순서대로 적용하면 됩니다 (자동 마이그레이션 도구는 아직 없음).
 
 # 3) 백엔드 (포트 4000, 코드 수정 시 자동 재시작)
 cd backend
@@ -139,7 +164,7 @@ npm run seed:demo:clean   # 재생성 없이 데모 데이터만 삭제(원복)
 
 ---
 
-## 8. "운영" 모드로 같은 PC에서 띄우기
+## 9. "운영" 모드로 같은 PC에서 띄우기
 
 개발과 운영을 **완전히 다른 포트·다른 DB**로 분리해서 동시에 켜둘 수 있습니다.
 
@@ -148,8 +173,12 @@ npm run seed:demo:clean   # 재생성 없이 데모 데이터만 삭제(원복)
 copy .env.example .env.production   # backend 폴더 안에서, 값은 운영용으로 채움 (DB_PORT=3308 등)
 docker compose --env-file .env.production -f docker-compose.prod.yml up -d
 
-# 2) 운영 스키마 적용
+# 2) 운영 스키마 적용 (migrations 폴더 파일을 번호 순서대로 전부 적용 — 개발과 동일한 방식)
 docker exec -i smartvault-prod-db mysql -u <운영유저> -p<운영비번> smartvault_prod < backend\migrations\001_init.sql
+docker exec -i smartvault-prod-db mysql -u <운영유저> -p<운영비번> smartvault_prod < backend\migrations\002_personnel_and_door_control.sql
+docker exec -i smartvault-prod-db mysql -u <운영유저> -p<운영비번> smartvault_prod < backend\migrations\003_gateway_reported_lock_state.sql
+docker exec -i smartvault-prod-db mysql -u <운영유저> -p<운영비번> smartvault_prod < backend\migrations\004_org_groups.sql
+docker exec -i smartvault-prod-db mysql -u <운영유저> -p<운영비번> smartvault_prod < backend\migrations\005_detected_gateways.sql
 ```
 
 운영 백엔드는 터미널을 계속 열어두지 않도록 **PM2**로 상시 구동합니다:
@@ -179,16 +208,26 @@ pm2 list                  # 운영 백엔드 프로세스 상태
 
 ---
 
-## 9. Claude Code로 작업 시작하기
+## 10. Claude Code로 작업 시작하기
+
+VS Code에서 `smartvault` 폴더를 열고, 통합 터미널(`` Ctrl+` ``)에서:
+
+```powershell
+claude
+```
+
+또는 VS Code 밖에서 그냥 PowerShell로:
 
 ```powershell
 cd C:\dev\smartvault
 claude
 ```
 
-Claude Code 안에서 이 레포 구조(firmware/gateway-bridge/backend/frontend/docs)와
-`docs/architecture.md`(별도 전달된 아키텍처 제안서를 이 폴더에 복사해두시면 Claude Code가 참고합니다)를
-기준으로 이어서 개발을 진행하시면 됩니다.
+레포에 이미 `docs/architecture.md`(아키텍처), `docs/data-model-personnel-door-control.md`(인원/RFID/개폐
+데이터 모델), 이 문서(`docs/dev-environment-setup.md`)가 들어있어서 Claude Code가 새 PC에서도 곧바로
+참고할 수 있습니다. `frontend/.claude/skills/run-frontend/`도 그대로 따라오므로, Playwright만 설치하면
+(`cd frontend && npm install -D playwright && npx playwright install chromium`) 프론트엔드 화면 검증도
+기존 PC와 동일하게 쓸 수 있습니다.
 
 **작업 지시할 때 팁**: "백엔드에 gateways CRUD API 만들어줘" 처럼 레이어 이름(routes/services/repositories)을
 명시하면 이 레포 구조를 그대로 따라서 코드를 넣어줍니다.
@@ -197,10 +236,11 @@ Claude Code 안에서 이 레포 구조(firmware/gateway-bridge/backend/frontend
 
 ## 체크리스트
 
-- [ ] Git, Claude Code, Node.js, Python, Docker Desktop 설치 완료
+- [ ] Git, VS Code, Claude Code, Node.js, Python, Docker Desktop 설치 완료
 - [ ] `claude doctor` 정상
-- [ ] `.env.development` 채움 (커밋 안 됨 확인: `git status`에 안 뜨는지)
-- [ ] 개발 DB 컨테이너 기동 + 스키마 적용
+- [ ] 레포 클론 완료 (`git clone` — `git init` 아님, 이미 GitHub에 있는 레포)
+- [ ] 백엔드/프론트엔드 `.env.development` 각각 새로 채움(커밋 안 됨 확인: `git status`에 안 뜨는지)
+- [ ] 개발 DB 컨테이너 기동 + 마이그레이션 001~005 전부 적용
 - [ ] 백엔드 `/health` 정상 응답
 - [ ] 프론트엔드 dev 서버 기동
 - [ ] (선택) `npm run seed:demo`로 화면 테스트용 데모 데이터 생성
