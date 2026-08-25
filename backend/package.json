@@ -8,7 +8,8 @@
     "start": "cross-env NODE_ENV=production node src/app.js",
     "start:prod-pm2": "pm2 start src/app.js --name smartvault-backend-prod --env production",
     "migrate": "node-pg-migrate 2>NUL || echo \"migrations: backend/migrations 참고, DB에 맞는 마이그레이션 도구로 교체 예정\"",
-    "seed:demo": "node scripts/seed-demo-data.js"
+    "seed:demo": "node scripts/seed-demo-data.js",
+    "seed:demo:clean": "node scripts/seed-demo-data.js --clean"
   },
   "dependencies": {
     "bcrypt": "^5.1.1",

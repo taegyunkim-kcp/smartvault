@@ -2,6 +2,7 @@
 // 재실행해도 안전하도록(멱등) 매번 이전 데모 데이터(2CORPS/3CORPS, 26-2000xxx, DEMO-UID-*)를
 // 먼저 지우고 새로 생성한다. 사용자의 기존 데이터(1base/1CORPS 등)는 건드리지 않는다.
 // 실행: npm run seed:demo (backend/ 에서)
+// 원복(재생성 없이 데모 데이터만 삭제): npm run seed:demo:clean
 
 const path = require('path');
 const dotenv = require('dotenv');
@@ -111,6 +112,21 @@ async function clearPreviousDemoData(conn) {
   );
   await conn.query(`DELETE FROM buildings WHERE base_code IN (?)`, [demoBaseCodes]);
   await conn.query(`DELETE FROM bases WHERE base_code IN (?)`, [demoBaseCodes]);
+}
+
+async function clean() {
+  const conn = await pool.getConnection();
+  try {
+    await conn.beginTransaction();
+    await clearPreviousDemoData(conn);
+    await conn.commit();
+    console.log('데모 데이터 삭제 완료 (재생성 없이 원복).');
+  } catch (err) {
+    await conn.rollback();
+    throw err;
+  } finally {
+    conn.release();
+  }
 }
 
 async function seed() {
@@ -231,9 +247,11 @@ async function seed() {
   }
 }
 
-seed()
+const run = process.argv.includes('--clean') ? clean : seed;
+
+run()
   .then(() => pool.end())
   .catch((err) => {
-    console.error('데모 데이터 생성 실패:', err);
+    console.error('데모 데이터 스크립트 실패:', err);
     return pool.end().finally(() => process.exit(1));
   });
