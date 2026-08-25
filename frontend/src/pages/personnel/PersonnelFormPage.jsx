@@ -1,10 +1,10 @@
 import { useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import { createPersonnel, deletePersonnel, getPersonnel, updatePersonnel } from '../../api/personnel';
+import { createPersonnel, deletePersonnel, getPersonnel, unmatchPersonnel, updatePersonnel } from '../../api/personnel';
 import { listRooms } from '../../api/rooms';
 import '../../styles/crud.css';
 
-const EMPTY_FORM = { service_number: '', name: '', phone_number: '', room_code: '' };
+const EMPTY_FORM = { service_number: '', name: '', phone_number: '', room_code: '', rfid_uid: '' };
 
 function PersonnelFormPage() {
   const { serviceNumber } = useParams();
@@ -15,6 +15,7 @@ function PersonnelFormPage() {
   const [rooms, setRooms] = useState([]);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [unmatching, setUnmatching] = useState(false);
   const [error, setError] = useState(null);
 
   useEffect(() => {
@@ -32,6 +33,7 @@ function PersonnelFormPage() {
             name: person.name,
             phone_number: person.phone_number || '',
             room_code: person.room_code,
+            rfid_uid: person.rfid_uid || '',
           });
         }
       } catch (err) {
@@ -43,6 +45,20 @@ function PersonnelFormPage() {
 
     load();
   }, [serviceNumber, isEditing]);
+
+  async function handleUnmatchRfid() {
+    if (!window.confirm('이 인원의 RFID 매칭을 해제하시겠습니까? 상태가 "RFID 미매핑"으로 바뀝니다.')) return;
+    setUnmatching(true);
+    setError(null);
+    try {
+      await unmatchPersonnel(serviceNumber);
+      setForm((f) => ({ ...f, rfid_uid: '' }));
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setUnmatching(false);
+    }
+  }
 
   function fieldError(keyword) {
     return error && error.includes(keyword) ? error : null;
@@ -145,6 +161,20 @@ function PersonnelFormPage() {
           </select>
           {fieldError('room_code') && <div className="field-error">{fieldError('room_code')}</div>}
         </div>
+
+        {isEditing && (
+          <div className="form-field">
+            <label>RFID UID</label>
+            <div className="page-toolbar">
+              <span>{form.rfid_uid || 'RFID 미매핑'}</span>
+              {form.rfid_uid && (
+                <button type="button" disabled={unmatching} onClick={handleUnmatchRfid}>
+                  RFID 해제
+                </button>
+              )}
+            </div>
+          </div>
+        )}
 
         <div className="form-actions">
           <button type="submit" className="primary" disabled={saving}>
