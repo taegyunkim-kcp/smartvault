@@ -41,6 +41,7 @@ app.use('/api/bridge', require('./routes/bridgePolicy'));
 app.use('/api/door-schedule-templates', require('./routes/doorScheduleTemplates'));
 app.use('/api/door-schedules', require('./routes/doorSchedules'));
 app.use('/api/door-overrides', require('./routes/doorOverrides'));
+app.use('/api/events', require('./routes/events'));
 
 const PORT = process.env.PORT || 4000;
 app.listen(PORT, () => {
