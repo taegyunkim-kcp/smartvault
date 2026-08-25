@@ -86,7 +86,14 @@ async function findRoomSummaries({ buildingCode, onlineMinutes }) {
          WHERE g3.room_code = r.room_code
          ORDER BY de.occurred_at DESC
          LIMIT 1
-       ) AS last_door_at
+       ) AS last_door_at,
+       (
+         SELECT gw2.reported_lock_state
+         FROM gateways gw2
+         WHERE gw2.room_code = r.room_code AND gw2.reported_lock_state IS NOT NULL
+         ORDER BY gw2.reported_lock_state_at DESC
+         LIMIT 1
+       ) AS reported_lock_state
      FROM rooms r
      LEFT JOIN gateways gw ON gw.room_code = r.room_code
      WHERE (:buildingCode IS NULL OR r.building_code = :buildingCode)

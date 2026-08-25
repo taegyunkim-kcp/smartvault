@@ -7,9 +7,13 @@ class ServiceError extends Error {
   }
 }
 
+const VALID_KINDS = ['rfid', 'door', 'lock_status'];
+const VALID_LOCK_STATES = ['locked', 'unlocked'];
+
 function isValidEventShape(event) {
   if (!event || typeof event !== 'object') return false;
-  if (!event.gateway_id || (event.kind !== 'rfid' && event.kind !== 'door')) return false;
+  if (!event.gateway_id || !VALID_KINDS.includes(event.kind)) return false;
+  if (event.kind === 'lock_status' && !VALID_LOCK_STATES.includes(event.lock_state)) return false;
   return true;
 }
 
@@ -41,10 +45,16 @@ async function ingestEvents(events) {
         eventType: event.event_type,
         occurredAt,
       });
-    } else {
+    } else if (event.kind === 'door') {
       await ingestRepository.insertDoorEvent({
         gatewayId: event.gateway_id,
         doorState: event.door_state,
+        occurredAt,
+      });
+    } else {
+      await ingestRepository.updateReportedLockState({
+        gatewayId: event.gateway_id,
+        lockState: event.lock_state,
         occurredAt,
       });
     }

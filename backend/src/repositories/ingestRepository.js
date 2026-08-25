@@ -38,6 +38,14 @@ async function insertDoorEvent({ gatewayId, doorState, occurredAt }) {
   );
 }
 
+async function updateReportedLockState({ gatewayId, lockState, occurredAt }) {
+  await pool.execute(
+    `UPDATE gateways SET reported_lock_state = :lockState, reported_lock_state_at = :occurredAt
+     WHERE gateway_id = :gatewayId`,
+    { gatewayId, lockState, occurredAt }
+  );
+}
+
 async function touchLastSeen(gatewayIds) {
   if (gatewayIds.length === 0) return;
 
@@ -53,4 +61,10 @@ async function touchLastSeen(gatewayIds) {
   );
 }
 
-module.exports = { findExistingGatewayIds, insertRfidEvent, insertDoorEvent, touchLastSeen };
+module.exports = {
+  findExistingGatewayIds,
+  insertRfidEvent,
+  insertDoorEvent,
+  updateReportedLockState,
+  touchLastSeen,
+};
