@@ -19,6 +19,7 @@ import '../../styles/crud.css';
 
 const SCOPE_TYPE_LABELS = { base: '중대', building: '소대', room: '내무반' };
 const DOOR_STATE_LABEL = { open: '열림', closed: '닫힘' };
+const LOCK_STATE_LABEL = { locked: '잠김', unlocked: '열림 허용' };
 
 function SchedulePage() {
   const [scopeType, setScopeType] = useState('room');
@@ -30,6 +31,7 @@ function SchedulePage() {
   const [weekSlots, setWeekSlots] = useState(emptyWeekSlots());
   const [effectivePolicy, setEffectivePolicy] = useState(null);
   const [doorState, setDoorState] = useState(null);
+  const [reportedLockState, setReportedLockState] = useState(null);
   const [durationMinutes, setDurationMinutes] = useState(10);
   const [error, setError] = useState(null);
   const [loading, setLoading] = useState(false);
@@ -47,6 +49,7 @@ function SchedulePage() {
       setDirectSchedule(null);
       setEffectivePolicy(null);
       setDoorState(null);
+      setReportedLockState(null);
 
       try {
         const options =
@@ -80,10 +83,12 @@ function SchedulePage() {
             const roomSummaries = await getRoomSummaries(room.building_code);
             const summary = roomSummaries.find((r) => r.room_code === scopeCode);
             setDoorState(summary ? summary.last_door_state : null);
+            setReportedLockState(summary ? summary.reported_lock_state : null);
           }
         } else {
           setEffectivePolicy(null);
           setDoorState(null);
+          setReportedLockState(null);
         }
       } catch (err) {
         setError(err.message);
@@ -222,6 +227,17 @@ function SchedulePage() {
                 {effectivePolicy?.effective_schedule
                   ? `${effectivePolicy.effective_schedule.scope_type}(${effectivePolicy.effective_schedule.scope_code})에서 상속`
                   : '없음'}
+              </span>
+              <span className="spacer" />
+              <span>
+                게이트웨이 보고 설정:{' '}
+                {reportedLockState ? (
+                  <span className={`badge ${reportedLockState === 'unlocked' ? 'badge-online' : 'badge-offline'}`}>
+                    {LOCK_STATE_LABEL[reportedLockState]}
+                  </span>
+                ) : (
+                  '미보고'
+                )}
               </span>
               <span className="spacer" />
               <span>

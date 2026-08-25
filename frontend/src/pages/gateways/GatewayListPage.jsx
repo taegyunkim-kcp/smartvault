@@ -4,6 +4,8 @@ import { listGateways, deleteGateway } from '../../api/gateways';
 import { listRooms } from '../../api/rooms';
 import '../../styles/crud.css';
 
+const LOCK_STATE_LABELS = { locked: '잠김', unlocked: '열림 허용' };
+
 function GatewayListPage() {
   const navigate = useNavigate();
   const [gateways, setGateways] = useState([]);
@@ -82,13 +84,14 @@ function GatewayListPage() {
               <th>reader_count</th>
               <th>firmware_version</th>
               <th>last_seen_at</th>
+              <th>개폐 설정</th>
               <th></th>
             </tr>
           </thead>
           <tbody>
             {gateways.length === 0 && (
               <tr>
-                <td colSpan={6}>등록된 게이트웨이가 없습니다.</td>
+                <td colSpan={7}>등록된 게이트웨이가 없습니다.</td>
               </tr>
             )}
             {gateways.map((gw) => (
@@ -98,6 +101,7 @@ function GatewayListPage() {
                 <td>{gw.reader_count}</td>
                 <td>{gw.firmware_version || '-'}</td>
                 <td>{gw.last_seen_at || '-'}</td>
+                <td>{LOCK_STATE_LABELS[gw.reported_lock_state] || '미보고'}</td>
                 <td className="actions">
                   <button type="button" onClick={(e) => handleDelete(e, gw.gateway_id)}>
                     삭제

@@ -4,6 +4,7 @@ import { getRoomSummaries } from '../../api/dashboard';
 import '../../styles/crud.css';
 
 const DOOR_STATE_LABEL = { open: '열림', closed: '닫힘' };
+const LOCK_STATE_LABEL = { locked: '잠김', unlocked: '열림 허용' };
 
 function DashboardRoomsPage() {
   const { baseCode, buildingCode } = useParams();
@@ -48,6 +49,7 @@ function DashboardRoomsPage() {
               <th>게이트웨이</th>
               <th>최근 24시간 이벤트</th>
               <th>문 상태</th>
+              <th>개폐 설정</th>
             </tr>
           </thead>
           <tbody>
@@ -69,6 +71,17 @@ function DashboardRoomsPage() {
                 </td>
                 <td>{room.event_count_24h}건</td>
                 <td>{room.last_door_state ? DOOR_STATE_LABEL[room.last_door_state] : '-'}</td>
+                <td>
+                  {room.reported_lock_state ? (
+                    <span
+                      className={`badge ${room.reported_lock_state === 'unlocked' ? 'badge-online' : 'badge-offline'}`}
+                    >
+                      {LOCK_STATE_LABEL[room.reported_lock_state]}
+                    </span>
+                  ) : (
+                    '미보고'
+                  )}
+                </td>
               </tr>
             ))}
           </tbody>
