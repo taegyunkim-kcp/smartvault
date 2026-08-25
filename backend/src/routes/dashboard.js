@@ -1,5 +1,6 @@
 const express = require('express');
 const dashboardService = require('../services/dashboardService');
+const personnelStatusService = require('../services/personnelStatusService');
 
 const router = express.Router();
 
@@ -27,6 +28,14 @@ router.get('/buildings', async (req, res) => {
 router.get('/rooms', async (req, res) => {
   try {
     res.json(await dashboardService.getRoomSummaries(req.query.building_code));
+  } catch (err) {
+    handleError(res, err);
+  }
+});
+
+router.get('/personnel-status', async (req, res) => {
+  try {
+    res.json(await personnelStatusService.getStatusOverview());
   } catch (err) {
     handleError(res, err);
   }
