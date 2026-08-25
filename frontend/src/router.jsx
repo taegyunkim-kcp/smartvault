@@ -1,6 +1,5 @@
 import { createBrowserRouter } from 'react-router-dom';
 import AppLayout from './layout/AppLayout';
-import ComingSoonPage from './pages/ComingSoonPage';
 import GatewayListPage from './pages/gateways/GatewayListPage';
 import GatewayFormPage from './pages/gateways/GatewayFormPage';
 import BaseListPage from './pages/bases/BaseListPage';
@@ -18,6 +17,7 @@ import PersonnelMatchPage from './pages/personnel/PersonnelMatchPage';
 import TemplateListPage from './pages/schedules/TemplateListPage';
 import TemplateFormPage from './pages/schedules/TemplateFormPage';
 import SchedulePage from './pages/schedules/SchedulePage';
+import EventLogPage from './pages/events/EventLogPage';
 
 const router = createBrowserRouter([
   {
@@ -27,7 +27,7 @@ const router = createBrowserRouter([
       { index: true, element: <DashboardBasesPage /> },
       { path: 'dashboard/:baseCode', element: <DashboardBuildingsPage /> },
       { path: 'dashboard/:baseCode/:buildingCode', element: <DashboardRoomsPage /> },
-      { path: 'events', element: <ComingSoonPage title="이벤트 로그" /> },
+      { path: 'events', element: <EventLogPage /> },
       { path: 'gateways', element: <GatewayListPage /> },
       { path: 'gateways/new', element: <GatewayFormPage /> },
       { path: 'gateways/:gatewayId/edit', element: <GatewayFormPage /> },
