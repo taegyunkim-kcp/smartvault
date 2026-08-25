@@ -2,12 +2,7 @@ import { createBrowserRouter } from 'react-router-dom';
 import AppLayout from './layout/AppLayout';
 import GatewayListPage from './pages/gateways/GatewayListPage';
 import GatewayFormPage from './pages/gateways/GatewayFormPage';
-import BaseListPage from './pages/bases/BaseListPage';
-import BaseFormPage from './pages/bases/BaseFormPage';
-import BuildingListPage from './pages/buildings/BuildingListPage';
-import BuildingFormPage from './pages/buildings/BuildingFormPage';
-import RoomListPage from './pages/rooms/RoomListPage';
-import RoomFormPage from './pages/rooms/RoomFormPage';
+import OrgStructurePage from './pages/org/OrgStructurePage';
 import DashboardBasesPage from './pages/dashboard/DashboardBasesPage';
 import DashboardByBasePage from './pages/dashboard/DashboardByBasePage';
 import DashboardByRoomPage from './pages/dashboard/DashboardByRoomPage';
@@ -31,15 +26,7 @@ const router = createBrowserRouter([
       { path: 'gateways', element: <GatewayListPage /> },
       { path: 'gateways/new', element: <GatewayFormPage /> },
       { path: 'gateways/:gatewayId/edit', element: <GatewayFormPage /> },
-      { path: 'bases', element: <BaseListPage /> },
-      { path: 'bases/new', element: <BaseFormPage /> },
-      { path: 'bases/:baseCode/edit', element: <BaseFormPage /> },
-      { path: 'buildings', element: <BuildingListPage /> },
-      { path: 'buildings/new', element: <BuildingFormPage /> },
-      { path: 'buildings/:buildingCode/edit', element: <BuildingFormPage /> },
-      { path: 'rooms', element: <RoomListPage /> },
-      { path: 'rooms/new', element: <RoomFormPage /> },
-      { path: 'rooms/:roomCode/edit', element: <RoomFormPage /> },
+      { path: 'org', element: <OrgStructurePage /> },
       { path: 'personnel', element: <PersonnelListPage /> },
       { path: 'personnel/new', element: <PersonnelFormPage /> },
       { path: 'personnel/match', element: <PersonnelMatchPage /> },

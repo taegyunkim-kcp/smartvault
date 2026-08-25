@@ -21,4 +21,23 @@ function deleteGateway(gatewayId) {
   return request(`/api/gateways/${encodeURIComponent(gatewayId)}`, { method: 'DELETE' });
 }
 
-export { listGateways, getGateway, createGateway, updateGateway, deleteGateway };
+function listDetectedGateways() {
+  return request('/api/gateways/detected');
+}
+
+function matchDetectedGateway(gatewayId, data) {
+  return request(`/api/gateways/detected/${encodeURIComponent(gatewayId)}/match`, {
+    method: 'POST',
+    body: data,
+  });
+}
+
+export {
+  listGateways,
+  getGateway,
+  createGateway,
+  updateGateway,
+  deleteGateway,
+  listDetectedGateways,
+  matchDetectedGateway,
+};

@@ -144,7 +144,7 @@ function DashboardBasesPage() {
 
       {!error && bases.length === 0 ? (
         <div className="empty-state">
-          등록된 중대가 없습니다. <Link to="/bases">편제 관리</Link>에서 먼저 등록하세요.
+          등록된 중대가 없습니다. <Link to="/org">조직 구성</Link>에서 먼저 등록하세요.
         </div>
       ) : (
         <table className="data-table">

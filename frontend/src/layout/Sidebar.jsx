@@ -25,7 +25,7 @@ const NAV_GROUPS = [
   {
     title: '환경 설정',
     items: [
-      { label: '조직 구성', to: '/bases' },
+      { label: '조직 구성', to: '/org' },
       { label: '게이트웨이 등록', to: '/gateways' },
     ],
   },
