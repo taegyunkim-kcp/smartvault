@@ -20,9 +20,13 @@ async function findSchedule(scopeType, scopeCode) {
 }
 
 async function findActiveOverride(roomCode) {
+  // expires_at > NOW() (엄격 부등호)여야 한다. 취소(door_overrides.cancel)는
+  // expires_at을 그 순간의 NOW()로 당기는데, MySQL DATETIME은 초 단위라
+  // 취소 직후 같은 초 안에 재조회하면 BETWEEN(양끝 포함)은 여전히 true가
+  // 되어 방금 취소한 오버라이드가 "활성"으로 보이는 경합이 생긴다.
   const [rows] = await pool.execute(
     `SELECT * FROM door_overrides
-     WHERE room_code = :roomCode AND NOW() BETWEEN starts_at AND expires_at
+     WHERE room_code = :roomCode AND starts_at <= NOW() AND expires_at > NOW()
      ORDER BY starts_at DESC
      LIMIT 1`,
     { roomCode }
