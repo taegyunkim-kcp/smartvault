@@ -29,23 +29,25 @@
   outline-offset: 1px;
 }
 
-.room-tile.lock-locked {
+/* 타일 배경 = 문 열림/닫힘 상태 (가장 잘 보여야 하는 값) */
+.room-tile.door-open {
+  background: rgba(26, 156, 92, 0.22);
+  border-color: #1a9c5c;
+}
+
+.room-tile.door-closed {
   background: var(--bg-subtle);
   border-color: var(--border);
 }
 
-.room-tile.lock-unlocked {
-  background: rgba(230, 160, 30, 0.2);
-  border-color: #e6a01e;
-}
-
-.room-tile.lock-unknown {
+.room-tile.door-unknown {
   background: transparent;
   border-style: dashed;
   opacity: 0.55;
 }
 
-.room-tile-door {
+/* 우측 상단 점 = 게이트웨이가 보고한 개폐 설정 */
+.room-tile-reported {
   position: absolute;
   top: 3px;
   right: 3px;
@@ -55,16 +57,42 @@
   box-sizing: border-box;
 }
 
-.room-tile-door.door-open {
-  background: #1a9c5c;
+.room-tile-reported.lock-locked {
+  background: var(--text);
+  opacity: 0.5;
 }
 
-.room-tile-door.door-closed {
+.room-tile-reported.lock-unlocked {
+  background: #e6a01e;
+}
+
+.room-tile-reported.lock-unknown {
+  background: transparent;
+  border: 1px dashed var(--text);
+  opacity: 0.5;
+}
+
+/* 좌측 하단 각 = 서버가 계산한 계획 상태 */
+.room-tile-scheduled {
+  position: absolute;
+  bottom: 3px;
+  left: 3px;
+  width: 7px;
+  height: 7px;
+  border-radius: 2px;
+  box-sizing: border-box;
+}
+
+.room-tile-scheduled.scheduled-locked {
   background: var(--text);
   opacity: 0.4;
 }
 
-.room-tile-door.door-unknown {
+.room-tile-scheduled.scheduled-unlocked {
+  background: #e6a01e;
+}
+
+.room-tile-scheduled.scheduled-unknown {
   background: transparent;
   border: 1px dashed var(--text);
   opacity: 0.5;
@@ -89,16 +117,16 @@
   margin-left: 4px;
 }
 
-.legend-swatch.lock-locked {
+.legend-swatch.door-open {
+  background: rgba(26, 156, 92, 0.22);
+  border-color: #1a9c5c;
+}
+
+.legend-swatch.door-closed {
   background: var(--bg-subtle);
 }
 
-.legend-swatch.lock-unlocked {
-  background: rgba(230, 160, 30, 0.2);
-  border-color: #e6a01e;
-}
-
-.legend-swatch.lock-unknown {
+.legend-swatch.door-unknown {
   background: transparent;
   border-style: dashed;
 }
@@ -111,16 +139,38 @@
   margin-left: 4px;
 }
 
-.legend-dot.door-open {
-  background: #1a9c5c;
+.legend-dot.lock-locked {
+  background: var(--text);
+  opacity: 0.5;
 }
 
-.legend-dot.door-closed {
+.legend-dot.lock-unlocked {
+  background: #e6a01e;
+}
+
+.legend-dot.lock-unknown {
+  background: transparent;
+  border: 1px dashed var(--text);
+}
+
+.legend-square {
+  display: inline-block;
+  width: 9px;
+  height: 9px;
+  border-radius: 2px;
+  margin-left: 4px;
+}
+
+.legend-square.scheduled-locked {
   background: var(--text);
   opacity: 0.4;
 }
 
-.legend-dot.door-unknown {
+.legend-square.scheduled-unlocked {
+  background: #e6a01e;
+}
+
+.legend-square.scheduled-unknown {
   background: transparent;
   border: 1px dashed var(--text);
 }
