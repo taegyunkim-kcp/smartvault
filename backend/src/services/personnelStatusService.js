@@ -45,6 +45,7 @@ async function getStatusOverview() {
     unregistered: 0,
   };
   const personnel = [];
+  const byBase = {};
 
   for (const row of rows) {
     let status = classifyPresence(row);
@@ -55,6 +56,13 @@ async function getStatusOverview() {
     }
 
     summary[status] += 1;
+
+    if (!byBase[row.base_code]) {
+      byBase[row.base_code] = { registered: 0, present: 0, absent: 0, anomaly: 0, wrong_room: 0 };
+    }
+    byBase[row.base_code].registered += 1;
+    byBase[row.base_code][status] += 1;
+
     personnel.push({
       service_number: row.service_number,
       name: row.name,
@@ -89,6 +97,7 @@ async function getStatusOverview() {
   return {
     summary,
     personnel,
+    by_base: byBase,
     unregistered_tags: unregisteredTags,
     recent_events: recentEvents,
   };

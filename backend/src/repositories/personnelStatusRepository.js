@@ -6,18 +6,22 @@ async function findMatchedPersonnelWithLatestEvent() {
        p.service_number,
        p.name,
        p.room_code AS home_room_code,
+       b.base_code,
        p.rfid_uid,
        re.event_type AS latest_event_type,
        re.occurred_at AS latest_event_at,
        g.room_code AS detected_room_code
      FROM personnel p
+     JOIN rooms r ON r.room_code = p.room_code
+     JOIN buildings bl ON bl.building_code = r.building_code
+     JOIN bases b ON b.base_code = bl.base_code
      LEFT JOIN rfid_events re ON re.rfid_uid = p.rfid_uid
        AND re.occurred_at = (
          SELECT MAX(re2.occurred_at) FROM rfid_events re2 WHERE re2.rfid_uid = p.rfid_uid
        )
      LEFT JOIN gateways g ON g.gateway_id = re.gateway_id
      WHERE p.rfid_uid IS NOT NULL
-     GROUP BY p.service_number, p.name, p.room_code, p.rfid_uid, re.event_type, re.occurred_at, g.room_code
+     GROUP BY p.service_number, p.name, p.room_code, b.base_code, p.rfid_uid, re.event_type, re.occurred_at, g.room_code
      ORDER BY p.service_number`
   );
   return rows;
