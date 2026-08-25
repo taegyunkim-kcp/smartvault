@@ -123,6 +123,20 @@ npm run dev
 
 `http://localhost:4000/health` 접속해서 `{"status":"ok","env":"development"}` 나오면 백엔드 정상.
 
+### 데모 데이터로 화면 테스트하기
+
+모니터링 대시보드/개폐 시간표 화면을 실제 데이터 없이도 눌러보며 확인할 수 있도록, 대량 데모 데이터를 채워주는 스크립트가 있습니다.
+
+```powershell
+cd backend
+npm run seed:demo         # 기지 2개, 내무반 10개, 인원 100명(RFID 90 매칭/10 미매칭), 탐지·개폐 이벤트 생성
+npm run seed:demo:clean   # 재생성 없이 데모 데이터만 삭제(원복)
+```
+
+- 재실행해도 안전합니다(멱등) — `seed:demo`를 다시 돌리면 이전 데모 데이터를 지우고 새로 채웁니다.
+- 생성/삭제 대상은 `base_code`가 `2CORPS`/`3CORPS`인 데이터, 군번이 `26-2000xxx`인 인원, `DEMO-UID-*` RFID로 한정되어 있어 기존에 등록해둔 실제 데이터(예: `1base`/`1CORPS`)는 건드리지 않습니다.
+- 자세한 생성 규칙(방 배치, 매칭/미매칭 비율, 상태 시뮬레이션 확률 등)은 `backend/scripts/seed-demo-data.js` 참고.
+
 ---
 
 ## 8. "운영" 모드로 같은 PC에서 띄우기
@@ -189,4 +203,5 @@ Claude Code 안에서 이 레포 구조(firmware/gateway-bridge/backend/frontend
 - [ ] 개발 DB 컨테이너 기동 + 스키마 적용
 - [ ] 백엔드 `/health` 정상 응답
 - [ ] 프론트엔드 dev 서버 기동
+- [ ] (선택) `npm run seed:demo`로 화면 테스트용 데모 데이터 생성
 - [ ] (운영 준비되면) `.env.production` 채움, prod DB 컨테이너 별도 기동, PM2로 백엔드 상시 구동
