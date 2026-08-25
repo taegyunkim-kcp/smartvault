@@ -34,8 +34,8 @@ app.use('/api/bases', require('./routes/bases'));
 app.use('/api/buildings', require('./routes/buildings'));
 app.use('/api/rooms', require('./routes/rooms'));
 app.use('/api/gateways', require('./routes/gateways'));
-
-// TODO: 게이트웨이 브리지 인증 미들웨어 연결 (middlewares/bridgeAuth.js)
+app.use('/api/ingest', require('./routes/ingest'));
+app.use('/api/bridge', require('./routes/bridgePolicy'));
 
 const PORT = process.env.PORT || 4000;
 app.listen(PORT, () => {
