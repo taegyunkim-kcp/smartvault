@@ -1,0 +1,126 @@
+.room-status-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin: 4px 0 10px;
+}
+
+.room-tile {
+  position: relative;
+  width: 42px;
+  height: 42px;
+  border-radius: 6px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 13px;
+  font-weight: 600;
+  border: 1px solid var(--border);
+  background: var(--bg-subtle);
+  color: var(--text-h);
+}
+
+.room-tile.clickable {
+  cursor: pointer;
+}
+
+.room-tile.clickable:hover {
+  outline: 2px solid var(--accent);
+  outline-offset: 1px;
+}
+
+.room-tile.lock-locked {
+  background: var(--bg-subtle);
+  border-color: var(--border);
+}
+
+.room-tile.lock-unlocked {
+  background: rgba(230, 160, 30, 0.2);
+  border-color: #e6a01e;
+}
+
+.room-tile.lock-unknown {
+  background: transparent;
+  border-style: dashed;
+  opacity: 0.55;
+}
+
+.room-tile-door {
+  position: absolute;
+  top: 3px;
+  right: 3px;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  box-sizing: border-box;
+}
+
+.room-tile-door.door-open {
+  background: #1a9c5c;
+}
+
+.room-tile-door.door-closed {
+  background: var(--text);
+  opacity: 0.4;
+}
+
+.room-tile-door.door-unknown {
+  background: transparent;
+  border: 1px dashed var(--text);
+  opacity: 0.5;
+}
+
+.room-status-legend {
+  font-size: 11px;
+  opacity: 0.7;
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 4px;
+  margin: 0 0 20px;
+}
+
+.legend-swatch {
+  display: inline-block;
+  width: 12px;
+  height: 12px;
+  border-radius: 3px;
+  border: 1px solid var(--border);
+  margin-left: 4px;
+}
+
+.legend-swatch.lock-locked {
+  background: var(--bg-subtle);
+}
+
+.legend-swatch.lock-unlocked {
+  background: rgba(230, 160, 30, 0.2);
+  border-color: #e6a01e;
+}
+
+.legend-swatch.lock-unknown {
+  background: transparent;
+  border-style: dashed;
+}
+
+.legend-dot {
+  display: inline-block;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  margin-left: 4px;
+}
+
+.legend-dot.door-open {
+  background: #1a9c5c;
+}
+
+.legend-dot.door-closed {
+  background: var(--text);
+  opacity: 0.4;
+}
+
+.legend-dot.door-unknown {
+  background: transparent;
+  border: 1px dashed var(--text);
+}
