@@ -6,6 +6,7 @@ import { listTemplates } from '../../api/doorScheduleTemplates';
 import {
   deleteSchedule,
   getEffectivePolicy,
+  getPolicyGroups,
   getSchedule,
   resetFromTemplate,
   saveSchedule,
@@ -15,6 +16,7 @@ import { getRoomSummaries } from '../../api/dashboard';
 import WeekSlotGrid from '../../components/WeekSlotGrid';
 import RoomStatusGrid from '../../components/RoomStatusGrid';
 import TemplateManagerModal from '../../components/TemplateManagerModal';
+import PolicyGroupBlock from '../../components/PolicyGroupBlock';
 import { emptyWeekSlots } from '../../components/weekSlots';
 import { formatDateTime } from '../../utils/formatDateTime';
 import '../../styles/crud.css';
@@ -38,6 +40,7 @@ function SchedulePage() {
   const [allRooms, setAllRooms] = useState([]);
   const [pendingScopeCode, setPendingScopeCode] = useState(null);
   const [showTemplateModal, setShowTemplateModal] = useState(false);
+  const [policyGroups, setPolicyGroups] = useState([]);
   const [error, setError] = useState(null);
   const [loading, setLoading] = useState(false);
   const [saving, setSaving] = useState(false);
@@ -48,6 +51,9 @@ function SchedulePage() {
       .catch((err) => setError(err.message));
     getRoomSummaries()
       .then(setAllRooms)
+      .catch((err) => setError(err.message));
+    getPolicyGroups()
+      .then(setPolicyGroups)
       .catch((err) => setError(err.message));
   }, []);
 
@@ -233,6 +239,11 @@ function SchedulePage() {
       </p>
 
       {error && <div className="banner-error">{error}</div>}
+
+      <h3 className="section-title">현재 정책 적용 현황</h3>
+      {policyGroups.map((group) => (
+        <PolicyGroupBlock key={`${group.scope_type}:${group.scope_code}`} group={group} />
+      ))}
 
       <h3 className="section-title">전체 내무반 현황</h3>
       <RoomStatusGrid rooms={allRooms} onSelectRoom={handleSelectRoomFromOverview} />

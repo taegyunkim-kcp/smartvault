@@ -1,0 +1,48 @@
+.policy-group-block {
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 14px 16px;
+  margin-bottom: 12px;
+  background: var(--bg);
+}
+
+.policy-group-header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.policy-group-header h4 {
+  font-size: 14px;
+  margin: 0;
+}
+
+.policy-group-toggle {
+  margin-left: auto;
+  padding: 4px 10px;
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  background: var(--bg);
+  cursor: pointer;
+  font-size: 12px;
+}
+
+.policy-group-rooms {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: 12px;
+}
+
+.policy-group-room-chip {
+  padding: 3px 9px;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  background: var(--bg-subtle);
+  font-size: 12px;
+}
+
+.policy-group-room-empty {
+  font-size: 12px;
+  opacity: 0.6;
+}
