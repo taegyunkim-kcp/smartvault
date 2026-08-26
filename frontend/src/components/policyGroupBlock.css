@@ -17,6 +17,11 @@
   margin: 0;
 }
 
+.policy-group-countdown {
+  font-size: 12px;
+  opacity: 0.7;
+}
+
 .policy-group-toggle {
   margin-left: auto;
   padding: 4px 10px;

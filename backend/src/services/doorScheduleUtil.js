@@ -21,6 +21,39 @@ function isLocked({ effective_schedule: effectiveSchedule, active_override: acti
   return Boolean(slots[slotIndex]);
 }
 
+// 지금 적용 중인 상태(잠김/열림)가 언제 바뀌는지 — 다음으로 값이 달라지는 슬롯의
+// 시작 시각(UTC)을 반환한다. 한 주(336슬롯) 안에서 값이 전혀 안 바뀌면 null.
+function getNextChangeAt(effectiveSchedule, now = new Date()) {
+  if (!effectiveSchedule || !effectiveSchedule.week_slots) return null;
+
+  const currentDayIdx = now.getUTCDay();
+  const currentSlotIdx = Math.floor((now.getUTCHours() * 60 + now.getUTCMinutes()) / 30);
+  const currentSlots = effectiveSchedule.week_slots[DAY_KEYS[currentDayIdx]];
+  if (!Array.isArray(currentSlots)) return null;
+  const currentValue = Boolean(currentSlots[currentSlotIdx]);
+
+  const slotHour = Math.floor(currentSlotIdx / 2);
+  const slotMinute = (currentSlotIdx % 2) * 30;
+  const currentSlotStart = new Date(
+    Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate(), slotHour, slotMinute, 0, 0)
+  );
+
+  for (let k = 1; k <= 336; k += 1) {
+    const totalSlot = currentSlotIdx + k;
+    const dayOffset = Math.floor(totalSlot / 48);
+    const slotInDay = totalSlot % 48;
+    const dayIdx = (currentDayIdx + dayOffset) % 7;
+    const slots = effectiveSchedule.week_slots[DAY_KEYS[dayIdx]];
+    const value = Array.isArray(slots) ? Boolean(slots[slotInDay]) : currentValue;
+
+    if (value !== currentValue) {
+      return new Date(currentSlotStart.getTime() + k * 30 * 60 * 1000);
+    }
+  }
+
+  return null;
+}
+
 function assertValidWeekSlots(weekSlots) {
   if (!weekSlots || typeof weekSlots !== 'object') {
     throw new Error('week_slots는 객체여야 합니다.');
@@ -33,4 +66,4 @@ function assertValidWeekSlots(weekSlots) {
   }
 }
 
-module.exports = { DAY_KEYS, isLocked, assertValidWeekSlots };
+module.exports = { DAY_KEYS, isLocked, getNextChangeAt, assertValidWeekSlots };

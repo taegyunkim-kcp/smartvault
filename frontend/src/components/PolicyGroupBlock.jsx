@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import WeekSlotGrid from './WeekSlotGrid';
 import RoomStatusGrid from './RoomStatusGrid';
 import '../styles/crud.css';
@@ -6,8 +6,19 @@ import './policyGroupBlock.css';
 
 const SCOPE_TYPE_LABELS = { base: '중대', building: '소대', room: '내무반' };
 
+function formatRemaining(ms) {
+  if (ms <= 0) return '곧 변경';
+  const totalSeconds = Math.floor(ms / 1000);
+  const hours = Math.floor(totalSeconds / 3600);
+  const minutes = Math.floor((totalSeconds % 3600) / 60);
+  const seconds = totalSeconds % 60;
+  if (hours > 0) return `${hours}시간 ${minutes}분 후 변경`;
+  return `${minutes}분 ${seconds}초 후 변경`;
+}
+
 function PolicyGroupBlock({ group, allRooms }) {
   const [expanded, setExpanded] = useState(false);
+  const [now, setNow] = useState(() => new Date());
   const isGlobal = group.scope_type === 'global';
   const title = isGlobal
     ? '기본 정책 (전체 적용)'
@@ -16,6 +27,12 @@ function PolicyGroupBlock({ group, allRooms }) {
   const groupRoomCodes = new Set(group.rooms.map((room) => room.room_code));
   const groupRoomSummaries = allRooms.filter((room) => groupRoomCodes.has(room.room_code));
 
+  useEffect(() => {
+    if (!group.next_change_at) return undefined;
+    const id = setInterval(() => setNow(new Date()), 1000);
+    return () => clearInterval(id);
+  }, [group.next_change_at]);
+
   return (
     <div className="policy-group-block">
       <div className="policy-group-header">
@@ -23,6 +40,11 @@ function PolicyGroupBlock({ group, allRooms }) {
         <span className={`badge ${group.currently_locked ? 'badge-offline' : 'badge-online'}`}>
           {group.currently_locked ? '잠김' : '열림 허용'}
         </span>
+        {group.next_change_at && (
+          <span className="policy-group-countdown">
+            {formatRemaining(new Date(group.next_change_at) - now)}
+          </span>
+        )}
         <button type="button" className="policy-group-toggle" onClick={() => setExpanded((v) => !v)}>
           {expanded ? '시간표 접기' : '시간표 보기'}
         </button>

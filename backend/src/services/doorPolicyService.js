@@ -1,6 +1,6 @@
 const doorPolicyRepository = require('../repositories/doorPolicyRepository');
 const roomRepository = require('../repositories/roomRepository');
-const { isLocked } = require('./doorScheduleUtil');
+const { isLocked, getNextChangeAt } = require('./doorScheduleUtil');
 
 class ServiceError extends Error {
   constructor(message, status) {
@@ -48,11 +48,13 @@ async function getPolicyGroups() {
     const key = `${schedule.scope_type}:${schedule.scope_code}`;
 
     if (!groups.has(key)) {
+      const nextChangeAt = getNextChangeAt(schedule);
       groups.set(key, {
         scope_type: schedule.scope_type,
         scope_code: schedule.scope_code,
         week_slots: schedule.week_slots,
         currently_locked: isLocked({ effective_schedule: schedule, active_override: null }),
+        next_change_at: nextChangeAt ? nextChangeAt.toISOString() : null,
         rooms: [],
       });
     }
