@@ -27,22 +27,83 @@
   font-size: 12px;
 }
 
-.policy-group-rooms {
+/* 항상 보이는 요약 타일 — 정책의 현재 잠김/열림 상태를 색으로 표시 */
+.policy-group-tiles {
   display: flex;
   flex-wrap: wrap;
   gap: 6px;
   margin-top: 12px;
 }
 
-.policy-group-room-chip {
-  padding: 3px 9px;
-  border: 1px solid var(--border);
-  border-radius: 12px;
-  background: var(--bg-subtle);
+.policy-room-tile {
+  width: 32px;
+  height: 32px;
+  border-radius: 6px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
   font-size: 12px;
+  font-weight: 600;
+  border: 1px solid var(--border);
+}
+
+.policy-room-tile.locked {
+  background: var(--bg-subtle);
+  color: var(--text);
+  opacity: 0.7;
+}
+
+.policy-room-tile.unlocked {
+  background: rgba(26, 156, 92, 0.22);
+  border-color: #1a9c5c;
+  color: #1a9c5c;
 }
 
 .policy-group-room-empty {
   font-size: 12px;
   opacity: 0.6;
+}
+
+/* 시간표 보기 펼쳤을 때만 나오는 상세 — 시간표(왼쪽) + 내무반 목록(오른쪽) */
+.policy-group-detail {
+  display: flex;
+  gap: 20px;
+  align-items: flex-start;
+  margin-top: 14px;
+}
+
+.policy-group-detail-grid {
+  flex: 1;
+  min-width: 0;
+}
+
+.policy-group-detail-rooms {
+  width: 220px;
+  flex-shrink: 0;
+}
+
+.policy-group-detail-rooms h5 {
+  font-size: 12px;
+  font-weight: 600;
+  margin: 0 0 8px;
+  opacity: 0.7;
+}
+
+.policy-group-room-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  font-size: 12px;
+  max-height: 340px;
+  overflow-y: auto;
+}
+
+.policy-group-room-list li {
+  padding: 4px 8px;
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  background: var(--bg-subtle);
 }

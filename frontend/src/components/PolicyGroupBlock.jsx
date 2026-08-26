@@ -11,6 +11,7 @@ function PolicyGroupBlock({ group }) {
   const title = isGlobal
     ? '기본 정책 (전체 적용)'
     : `개별 정책 — ${SCOPE_TYPE_LABELS[group.scope_type] || group.scope_type} ${group.scope_code}`;
+  const lockClass = group.currently_locked ? 'locked' : 'unlocked';
 
   return (
     <div className="policy-group-block">
@@ -24,19 +25,43 @@ function PolicyGroupBlock({ group }) {
         </button>
       </div>
 
-      {expanded && <WeekSlotGrid value={group.week_slots} readOnly />}
-
-      <div className="policy-group-rooms">
+      <div className="policy-group-tiles">
         {group.rooms.length === 0 ? (
           <span className="policy-group-room-empty">해당하는 내무반이 없습니다.</span>
         ) : (
-          group.rooms.map((room) => (
-            <span key={room.room_code} className="policy-group-room-chip">
-              {room.room_code} — {room.room_name || '(이름 없음)'}
-            </span>
+          group.rooms.map((room, index) => (
+            <div
+              key={room.room_code}
+              className={`policy-room-tile ${lockClass}`}
+              title={`${room.room_code} — ${room.room_name || '(이름 없음)'}`}
+            >
+              {index + 1}
+            </div>
           ))
         )}
       </div>
+
+      {expanded && (
+        <div className="policy-group-detail">
+          <div className="policy-group-detail-grid">
+            <WeekSlotGrid value={group.week_slots} readOnly />
+          </div>
+          <div className="policy-group-detail-rooms">
+            <h5>적용 내무반 ({group.rooms.length})</h5>
+            {group.rooms.length === 0 ? (
+              <p className="policy-group-room-empty">해당하는 내무반이 없습니다.</p>
+            ) : (
+              <ul className="policy-group-room-list">
+                {group.rooms.map((room) => (
+                  <li key={room.room_code}>
+                    {room.room_code} — {room.room_name || '(이름 없음)'}
+                  </li>
+                ))}
+              </ul>
+            )}
+          </div>
+        </div>
+      )}
     </div>
   );
 }
