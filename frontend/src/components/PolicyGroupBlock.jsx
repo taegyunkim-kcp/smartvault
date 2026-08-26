@@ -1,17 +1,20 @@
 import { useState } from 'react';
 import WeekSlotGrid from './WeekSlotGrid';
+import RoomStatusGrid from './RoomStatusGrid';
 import '../styles/crud.css';
 import './policyGroupBlock.css';
 
 const SCOPE_TYPE_LABELS = { base: '중대', building: '소대', room: '내무반' };
 
-function PolicyGroupBlock({ group }) {
+function PolicyGroupBlock({ group, allRooms }) {
   const [expanded, setExpanded] = useState(false);
   const isGlobal = group.scope_type === 'global';
   const title = isGlobal
     ? '기본 정책 (전체 적용)'
     : `개별 정책 — ${SCOPE_TYPE_LABELS[group.scope_type] || group.scope_type} ${group.scope_code}`;
-  const lockClass = group.currently_locked ? 'locked' : 'unlocked';
+
+  const groupRoomCodes = new Set(group.rooms.map((room) => room.room_code));
+  const groupRoomSummaries = allRooms.filter((room) => groupRoomCodes.has(room.room_code));
 
   return (
     <div className="policy-group-block">
@@ -25,21 +28,7 @@ function PolicyGroupBlock({ group }) {
         </button>
       </div>
 
-      <div className="policy-group-tiles">
-        {group.rooms.length === 0 ? (
-          <span className="policy-group-room-empty">해당하는 내무반이 없습니다.</span>
-        ) : (
-          group.rooms.map((room, index) => (
-            <div
-              key={room.room_code}
-              className={`policy-room-tile ${lockClass}`}
-              title={`${room.room_code} — ${room.room_name || '(이름 없음)'}`}
-            >
-              {index + 1}
-            </div>
-          ))
-        )}
-      </div>
+      <RoomStatusGrid rooms={groupRoomSummaries} />
 
       {expanded && (
         <div className="policy-group-detail">

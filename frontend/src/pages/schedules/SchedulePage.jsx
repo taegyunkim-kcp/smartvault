@@ -242,7 +242,7 @@ function SchedulePage() {
 
       <h3 className="section-title">현재 정책 적용 현황</h3>
       {policyGroups.map((group) => (
-        <PolicyGroupBlock key={`${group.scope_type}:${group.scope_code}`} group={group} />
+        <PolicyGroupBlock key={`${group.scope_type}:${group.scope_code}`} group={group} allRooms={allRooms} />
       ))}
 
       <h3 className="section-title">전체 내무반 현황</h3>
