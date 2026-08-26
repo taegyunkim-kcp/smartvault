@@ -6,6 +6,9 @@ function isLocked({ effective_schedule: effectiveSchedule, active_override: acti
   if (activeOverride && activeOverride.door_command === 'open') {
     return false;
   }
+  if (activeOverride && activeOverride.door_command === 'lock') {
+    return true;
+  }
   if (!effectiveSchedule || !effectiveSchedule.week_slots) {
     return false;
   }
