@@ -98,6 +98,36 @@
   opacity: 0.5;
 }
 
+/* 우측 하단 점 = 즉각 실행(오버라이드) 활성 중 */
+.room-tile-instant {
+  position: absolute;
+  bottom: 3px;
+  right: 3px;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--accent);
+  animation: room-tile-instant-blink 1s ease-in-out infinite;
+}
+
+@keyframes room-tile-instant-blink {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.25;
+  }
+}
+
+.room-tile-countdown {
+  font-size: 10px;
+  font-variant-numeric: tabular-nums;
+}
+
+.legend-dot.instant-active {
+  background: var(--accent);
+}
+
 .room-status-legend {
   font-size: 11px;
   opacity: 0.7;

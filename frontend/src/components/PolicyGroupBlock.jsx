@@ -1,10 +1,12 @@
 import { useEffect, useState } from 'react';
 import WeekSlotGrid from './WeekSlotGrid';
 import RoomStatusGrid from './RoomStatusGrid';
+import { createOverride, cancelOverride } from '../api/doorOverrides';
 import '../styles/crud.css';
 import './policyGroupBlock.css';
 
 const SCOPE_TYPE_LABELS = { base: '중대', building: '소대', room: '내무반' };
+const SLOT_MINUTES = 30;
 
 function formatRemaining(ms) {
   if (ms <= 0) return '곧 변경';
@@ -16,9 +18,18 @@ function formatRemaining(ms) {
   return `${minutes}분 ${seconds}초 후 변경`;
 }
 
-function PolicyGroupBlock({ group, allRooms }) {
+// 지금 슬롯(30분)이 끝날 때까지 남은 시간(분, 올림) — 즉각 실행 지속 시간으로 사용.
+function minutesUntilSlotEnd(now) {
+  const secondsIntoSlot = (now.getUTCMinutes() % SLOT_MINUTES) * 60 + now.getUTCSeconds();
+  const remainingSeconds = SLOT_MINUTES * 60 - secondsIntoSlot;
+  return Math.min(SLOT_MINUTES, Math.max(1, Math.ceil(remainingSeconds / 60)));
+}
+
+function PolicyGroupBlock({ group, allRooms, activeOverrides, onOverrideChanged }) {
   const [expanded, setExpanded] = useState(false);
   const [now, setNow] = useState(() => new Date());
+  const [pendingRoomCode, setPendingRoomCode] = useState(null);
+  const [error, setError] = useState(null);
   const isGlobal = group.scope_type === 'global';
   const title = isGlobal
     ? '기본 정책 (전체 적용)'
@@ -26,12 +37,38 @@ function PolicyGroupBlock({ group, allRooms }) {
 
   const groupRoomCodes = new Set(group.rooms.map((room) => room.room_code));
   const groupRoomSummaries = allRooms.filter((room) => groupRoomCodes.has(room.room_code));
+  const overridesByRoomCode = {};
+  for (const override of activeOverrides) {
+    if (groupRoomCodes.has(override.room_code)) {
+      overridesByRoomCode[override.room_code] = override;
+    }
+  }
+  const hasActiveOverride = Object.keys(overridesByRoomCode).length > 0;
 
   useEffect(() => {
-    if (!group.next_change_at) return undefined;
+    if (!group.next_change_at && !hasActiveOverride) return undefined;
     const id = setInterval(() => setNow(new Date()), 1000);
     return () => clearInterval(id);
-  }, [group.next_change_at]);
+  }, [group.next_change_at, hasActiveOverride]);
+
+  async function handleToggleRoom(roomCode) {
+    setPendingRoomCode(roomCode);
+    setError(null);
+    try {
+      const existing = overridesByRoomCode[roomCode];
+      if (existing) {
+        await cancelOverride(existing.id);
+      } else {
+        const doorCommand = group.currently_locked ? 'open' : 'lock';
+        await createOverride(roomCode, doorCommand, minutesUntilSlotEnd(new Date()));
+      }
+      await onOverrideChanged();
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setPendingRoomCode(null);
+    }
+  }
 
   return (
     <div className="policy-group-block">
@@ -50,7 +87,18 @@ function PolicyGroupBlock({ group, allRooms }) {
         </button>
       </div>
 
-      <RoomStatusGrid rooms={groupRoomSummaries} />
+      {error && <div className="banner-error">{error}</div>}
+
+      <p className="policy-group-hint">
+        내무반 타일을 클릭하면 지금 상태의 반대로 즉각 전환됩니다(남은 슬롯 시간만큼 적용, 다시 클릭하면 취소).
+      </p>
+
+      <RoomStatusGrid
+        rooms={groupRoomSummaries}
+        onSelectRoom={pendingRoomCode ? undefined : handleToggleRoom}
+        overridesByRoomCode={overridesByRoomCode}
+        now={now}
+      />
 
       {expanded && (
         <div className="policy-group-detail">

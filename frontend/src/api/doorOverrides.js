@@ -4,10 +4,14 @@ function listOverrides(roomCode) {
   return request(`/api/door-overrides?room_code=${encodeURIComponent(roomCode)}`);
 }
 
-function createOverride(roomCode, durationMinutes) {
+function listActiveOverrides() {
+  return request('/api/door-overrides/active');
+}
+
+function createOverride(roomCode, doorCommand, durationMinutes) {
   return request('/api/door-overrides', {
     method: 'POST',
-    body: { room_code: roomCode, duration_minutes: durationMinutes },
+    body: { room_code: roomCode, door_command: doorCommand, duration_minutes: durationMinutes },
   });
 }
 
@@ -15,4 +19,4 @@ function cancelOverride(id) {
   return request(`/api/door-overrides/${id}`, { method: 'DELETE' });
 }
 
-export { listOverrides, createOverride, cancelOverride };
+export { listOverrides, listActiveOverrides, createOverride, cancelOverride };

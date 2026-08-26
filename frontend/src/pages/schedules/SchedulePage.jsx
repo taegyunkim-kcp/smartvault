@@ -11,7 +11,7 @@ import {
   resetFromTemplate,
   saveSchedule,
 } from '../../api/doorSchedules';
-import { createOverride, cancelOverride } from '../../api/doorOverrides';
+import { createOverride, cancelOverride, listActiveOverrides } from '../../api/doorOverrides';
 import { getRoomSummaries } from '../../api/dashboard';
 import WeekSlotGrid from '../../components/WeekSlotGrid';
 import RoomStatusGrid from '../../components/RoomStatusGrid';
@@ -41,9 +41,16 @@ function SchedulePage() {
   const [pendingScopeCode, setPendingScopeCode] = useState(null);
   const [showTemplateModal, setShowTemplateModal] = useState(false);
   const [policyGroups, setPolicyGroups] = useState([]);
+  const [activeOverrides, setActiveOverrides] = useState([]);
   const [error, setError] = useState(null);
   const [loading, setLoading] = useState(false);
   const [saving, setSaving] = useState(false);
+
+  function loadActiveOverrides() {
+    return listActiveOverrides()
+      .then(setActiveOverrides)
+      .catch((err) => setError(err.message));
+  }
 
   useEffect(() => {
     listTemplates()
@@ -55,6 +62,7 @@ function SchedulePage() {
     getPolicyGroups()
       .then(setPolicyGroups)
       .catch((err) => setError(err.message));
+    loadActiveOverrides();
   }, []);
 
   function handleCloseTemplateModal(changed) {
@@ -193,8 +201,9 @@ function SchedulePage() {
     setSaving(true);
     setError(null);
     try {
-      await createOverride(scopeCode, Number(durationMinutes));
+      await createOverride(scopeCode, 'open', Number(durationMinutes));
       setEffectivePolicy(await getEffectivePolicy(scopeCode));
+      await loadActiveOverrides();
     } catch (err) {
       setError(err.message);
     } finally {
@@ -209,6 +218,7 @@ function SchedulePage() {
     try {
       await cancelOverride(effectivePolicy.active_override.id);
       setEffectivePolicy(await getEffectivePolicy(scopeCode));
+      await loadActiveOverrides();
     } catch (err) {
       setError(err.message);
     } finally {
@@ -242,7 +252,13 @@ function SchedulePage() {
 
       <h3 className="section-title">현재 정책 적용 현황</h3>
       {policyGroups.map((group) => (
-        <PolicyGroupBlock key={`${group.scope_type}:${group.scope_code}`} group={group} allRooms={allRooms} />
+        <PolicyGroupBlock
+          key={`${group.scope_type}:${group.scope_code}`}
+          group={group}
+          allRooms={allRooms}
+          activeOverrides={activeOverrides}
+          onOverrideChanged={loadActiveOverrides}
+        />
       ))}
 
       <h3 className="section-title">전체 내무반 현황</h3>
