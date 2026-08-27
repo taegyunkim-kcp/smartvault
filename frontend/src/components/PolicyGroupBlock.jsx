@@ -16,7 +16,6 @@ import '../styles/crud.css';
 import './policyGroupBlock.css';
 
 const SCOPE_TYPE_LABELS = { base: '중대', building: '소대', room: '내무반' };
-const SLOT_MINUTES = 30;
 
 function formatRemaining(ms) {
   if (ms <= 0) return '곧 변경';
@@ -26,13 +25,6 @@ function formatRemaining(ms) {
   const seconds = totalSeconds % 60;
   if (hours > 0) return `${hours}시간 ${minutes}분 후 변경`;
   return `${minutes}분 ${seconds}초 후 변경`;
-}
-
-// 지금 슬롯(30분)이 끝날 때까지 남은 시간(분, 올림) — 즉각 실행 지속 시간으로 사용.
-function minutesUntilSlotEnd(now) {
-  const secondsIntoSlot = (now.getUTCMinutes() % SLOT_MINUTES) * 60 + now.getUTCSeconds();
-  const remainingSeconds = SLOT_MINUTES * 60 - secondsIntoSlot;
-  return Math.min(SLOT_MINUTES, Math.max(1, Math.ceil(remainingSeconds / 60)));
 }
 
 function scopeOptionsFor(scopeType, { bases, buildings, rooms }) {
@@ -106,7 +98,7 @@ function PolicyGroupBlock({
         await cancelOverride(existing.id);
       } else {
         const doorCommand = group.currently_locked ? 'open' : 'lock';
-        await createOverride(roomCode, doorCommand, minutesUntilSlotEnd(new Date()));
+        await createOverride(roomCode, doorCommand);
       }
       await onOverrideChanged();
     } catch (err) {
