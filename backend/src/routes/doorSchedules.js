@@ -23,6 +23,16 @@ router.get('/effective', async (req, res) => {
   }
 });
 
+// GET /api/door-schedules/groups — 전체 내무반을 실제 적용받는 정책 기준으로 묶어서 반환.
+// "보관함 개폐 관리/제어" 화면 상단의 현재 정책 적용 현황 뷰용.
+router.get('/groups', async (req, res) => {
+  try {
+    res.json(await doorPolicyService.getPolicyGroups());
+  } catch (err) {
+    handleError(res, err);
+  }
+});
+
 // GET /api/door-schedules?scope_type=&scope_code=
 router.get('/', async (req, res) => {
   try {

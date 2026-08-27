@@ -1,0 +1,88 @@
+.policy-group-block {
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 14px 16px;
+  margin-bottom: 12px;
+  background: var(--bg);
+}
+
+.policy-group-header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.policy-group-header h4 {
+  font-size: 14px;
+  margin: 0;
+}
+
+.policy-group-countdown {
+  font-size: 12px;
+  opacity: 0.7;
+}
+
+.policy-group-hint {
+  font-size: 11px;
+  opacity: 0.6;
+  margin: 8px 0 0;
+}
+
+.policy-group-toggle {
+  margin-left: auto;
+  padding: 4px 10px;
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  background: var(--bg);
+  cursor: pointer;
+  font-size: 12px;
+}
+
+.policy-group-room-empty {
+  font-size: 12px;
+  opacity: 0.6;
+}
+
+/* 시간표 보기 펼쳤을 때만 나오는 상세 — 시간표(왼쪽) + 내무반 목록(오른쪽) */
+.policy-group-detail {
+  display: flex;
+  gap: 20px;
+  align-items: flex-start;
+  margin-top: 14px;
+}
+
+.policy-group-detail-grid {
+  flex: 1;
+  min-width: 0;
+}
+
+.policy-group-detail-rooms {
+  width: 220px;
+  flex-shrink: 0;
+}
+
+.policy-group-detail-rooms h5 {
+  font-size: 12px;
+  font-weight: 600;
+  margin: 0 0 8px;
+  opacity: 0.7;
+}
+
+.policy-group-room-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  font-size: 12px;
+  max-height: 340px;
+  overflow-y: auto;
+}
+
+.policy-group-room-list li {
+  padding: 4px 8px;
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  background: var(--bg-subtle);
+}

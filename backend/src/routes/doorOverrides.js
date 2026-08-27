@@ -19,11 +19,21 @@ router.get('/', async (req, res) => {
   }
 });
 
+// GET /api/door-overrides/active — 방 구분 없이 지금 활성 상태인 즉각 실행 전부.
+router.get('/active', async (req, res) => {
+  try {
+    res.json(await doorOverrideService.listActiveOverrides());
+  } catch (err) {
+    handleError(res, err);
+  }
+});
+
 router.post('/', async (req, res) => {
   try {
     const override = await doorOverrideService.createOverride({
       roomCode: req.body.room_code,
       durationMinutes: req.body.duration_minutes,
+      doorCommand: req.body.door_command,
     });
     res.status(201).json(override);
   } catch (err) {

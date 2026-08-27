@@ -4,6 +4,10 @@ function getEffectivePolicy(roomCode) {
   return request(`/api/door-schedules/effective?room_code=${encodeURIComponent(roomCode)}`);
 }
 
+function getPolicyGroups() {
+  return request('/api/door-schedules/groups');
+}
+
 function getSchedule(scopeType, scopeCode) {
   const query = new URLSearchParams({ scope_type: scopeType, scope_code: scopeCode }).toString();
   return request(`/api/door-schedules?${query}`);
@@ -29,4 +33,4 @@ function deleteSchedule(scopeType, scopeCode) {
   });
 }
 
-export { getEffectivePolicy, getSchedule, saveSchedule, resetFromTemplate, deleteSchedule };
+export { getEffectivePolicy, getPolicyGroups, getSchedule, saveSchedule, resetFromTemplate, deleteSchedule };

@@ -1,8 +1,14 @@
 import { DAY_KEYS, DAY_LABELS, emptyWeekSlots } from './weekSlots';
 import './weekSlotGrid.css';
 
+function currentSlot() {
+  const now = new Date();
+  return { dayKey: DAY_KEYS[now.getUTCDay()], slotIndex: Math.floor((now.getUTCHours() * 60 + now.getUTCMinutes()) / 30) };
+}
+
 function WeekSlotGrid({ value, onChange, readOnly }) {
   const weekSlots = value || emptyWeekSlots();
+  const { dayKey: currentDayKey, slotIndex: currentSlotIndex } = currentSlot();
 
   function toggleSlot(day, index) {
     if (readOnly) return;
@@ -36,7 +42,9 @@ function WeekSlotGrid({ value, onChange, readOnly }) {
             {weekSlots[day].map((locked, index) => (
               <div
                 key={index}
-                className={`week-slot-cell${locked ? ' locked' : ''}`}
+                className={`week-slot-cell${locked ? ' locked' : ''}${
+                  day === currentDayKey && index === currentSlotIndex ? ' current' : ''
+                }`}
                 onClick={() => toggleSlot(day, index)}
               />
             ))}

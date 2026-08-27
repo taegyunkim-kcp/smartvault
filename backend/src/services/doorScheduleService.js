@@ -2,7 +2,7 @@ const doorScheduleRepository = require('../repositories/doorScheduleRepository')
 const doorScheduleTemplateRepository = require('../repositories/doorScheduleTemplateRepository');
 const { assertValidWeekSlots } = require('./doorScheduleUtil');
 
-const SCOPE_TYPES = ['base', 'building', 'room'];
+const SCOPE_TYPES = ['base', 'building', 'room', 'global'];
 
 class ServiceError extends Error {
   constructor(message, status) {
@@ -53,6 +53,9 @@ async function resetFromTemplate(scopeType, scopeCode, templateCode) {
 
 async function deleteSchedule(scopeType, scopeCode) {
   assertScopeType(scopeType);
+  if (scopeType === 'global') {
+    throw new ServiceError('기본 정책은 삭제할 수 없습니다.', 400);
+  }
   await doorScheduleRepository.remove(scopeType, scopeCode);
 }
 
