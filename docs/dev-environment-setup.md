@@ -138,6 +138,11 @@ docker exec -i smartvault-dev-db mysql -u smartvault_dev -pktg0506@! smartvault_
 docker exec -i smartvault-dev-db mysql -u smartvault_dev -pktg0506@! smartvault_dev < backend\migrations\006_global_door_schedule.sql
 docker exec -i smartvault-dev-db mysql -u smartvault_dev -pktg0506@! smartvault_dev < backend\migrations\007_door_override_lock_command.sql
 docker exec -i smartvault-dev-db mysql -u smartvault_dev -pktg0506@! smartvault_dev < backend\migrations\008_status_event_acknowledgement.sql
+docker exec -i smartvault-dev-db mysql -u smartvault_dev -pktg0506@! smartvault_dev < backend\migrations\009_door_policies.sql
+# 009 적용 직후, 아래 1회성 스크립트로 기존 door_schedules 데이터를 door_policies/door_policy_scopes로 이관합니다.
+node backend\scripts\migrate-door-schedules-to-policies.js
+# 화면(보관함 개폐 관리/제어)에서 정책이 그대로 보이는지 확인한 뒤에만 010을 적용하세요(구 테이블을 지웁니다).
+docker exec -i smartvault-dev-db mysql -u smartvault_dev -pktg0506@! smartvault_dev < backend\migrations\010_drop_door_schedules.sql
 # 이후 새 마이그레이션이 추가되면 같은 방식으로 번호 순서대로 적용하면 됩니다 (자동 마이그레이션 도구는 아직 없음).
 
 # 3) 백엔드 (포트 4000, 코드 수정 시 자동 재시작)
@@ -185,6 +190,9 @@ docker exec -i smartvault-prod-db mysql -u <운영유저> -p<운영비번> smart
 docker exec -i smartvault-prod-db mysql -u <운영유저> -p<운영비번> smartvault_prod < backend\migrations\006_global_door_schedule.sql
 docker exec -i smartvault-prod-db mysql -u <운영유저> -p<운영비번> smartvault_prod < backend\migrations\007_door_override_lock_command.sql
 docker exec -i smartvault-prod-db mysql -u <운영유저> -p<운영비번> smartvault_prod < backend\migrations\008_status_event_acknowledgement.sql
+docker exec -i smartvault-prod-db mysql -u <운영유저> -p<운영비번> smartvault_prod < backend\migrations\009_door_policies.sql
+# .env.production으로 backend/scripts/migrate-door-schedules-to-policies.js 실행(NODE_ENV=production node ...) 후 확인, 그 다음에만:
+docker exec -i smartvault-prod-db mysql -u <운영유저> -p<운영비번> smartvault_prod < backend\migrations\010_drop_door_schedules.sql
 ```
 
 운영 백엔드는 터미널을 계속 열어두지 않도록 **PM2**로 상시 구동합니다:

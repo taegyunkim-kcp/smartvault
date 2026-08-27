@@ -4,13 +4,13 @@ import { listBuildings } from '../../api/buildings';
 import { listRooms } from '../../api/rooms';
 import { listTemplates } from '../../api/doorScheduleTemplates';
 import {
-  deleteSchedule,
+  cancelTempPolicy,
+  createPolicy,
   getEffectivePolicy,
-  getPolicyGroups,
-  getSchedule,
-  resetFromTemplate,
-  saveSchedule,
-} from '../../api/doorSchedules';
+  getTempPolicy,
+  listPolicies,
+  saveTempPolicy,
+} from '../../api/doorPolicies';
 import { createOverride, cancelOverride, listActiveOverrides } from '../../api/doorOverrides';
 import { getRoomSummaries } from '../../api/dashboard';
 import WeekSlotGrid from '../../components/WeekSlotGrid';
@@ -21,30 +21,36 @@ import { emptyWeekSlots } from '../../components/weekSlots';
 import { formatDateTime } from '../../utils/formatDateTime';
 import '../../styles/crud.css';
 
-const SCOPE_TYPE_LABELS = { base: '중대', building: '소대', room: '내무반' };
+const SCOPE_TYPE_LABELS = { base: '중대', building: '소대', room: '내무반', global: '전체' };
 const DOOR_STATE_LABEL = { open: '열림', closed: '닫힘' };
 const LOCK_STATE_LABEL = { locked: '잠김', unlocked: '열림 허용' };
 
 function SchedulePage() {
-  const [scopeType, setScopeType] = useState('room');
-  const [scopeOptions, setScopeOptions] = useState([]);
-  const [scopeCode, setScopeCode] = useState('');
-  const [templates, setTemplates] = useState([]);
-  const [selectedTemplate, setSelectedTemplate] = useState('');
-  const [directSchedule, setDirectSchedule] = useState(null);
-  const [weekSlots, setWeekSlots] = useState(emptyWeekSlots());
-  const [effectivePolicy, setEffectivePolicy] = useState(null);
-  const [doorState, setDoorState] = useState(null);
-  const [reportedLockState, setReportedLockState] = useState(null);
-  const [durationMinutes, setDurationMinutes] = useState(10);
+  const [bases, setBases] = useState([]);
+  const [buildings, setBuildings] = useState([]);
+  const [rooms, setRooms] = useState([]);
   const [allRooms, setAllRooms] = useState([]);
-  const [pendingScopeCode, setPendingScopeCode] = useState(null);
+  const [templates, setTemplates] = useState([]);
   const [showTemplateModal, setShowTemplateModal] = useState(false);
   const [policyGroups, setPolicyGroups] = useState([]);
+  const [newPolicyName, setNewPolicyName] = useState('');
+  const [creatingPolicy, setCreatingPolicy] = useState(false);
   const [activeOverrides, setActiveOverrides] = useState([]);
+
+  const [tempScopeType, setTempScopeType] = useState('room');
+  const [tempScopeCode, setTempScopeCode] = useState('');
+  const [tempWeekSlots, setTempWeekSlots] = useState(emptyWeekSlots());
+  const [activeTempPolicy, setActiveTempPolicy] = useState(null);
+  const [tempDoorState, setTempDoorState] = useState(null);
+  const [tempReportedLockState, setTempReportedLockState] = useState(null);
+  const [tempActiveOverride, setTempActiveOverride] = useState(null);
+  const [durationMinutes, setDurationMinutes] = useState(10);
+  const [tempLoading, setTempLoading] = useState(false);
+  const [tempSaving, setTempSaving] = useState(false);
+  const [tempError, setTempError] = useState(null);
+
   const [error, setError] = useState(null);
-  const [loading, setLoading] = useState(false);
-  const [saving, setSaving] = useState(false);
+  const [loading, setLoading] = useState(true);
 
   function loadActiveOverrides() {
     return listActiveOverrides()
@@ -52,16 +58,39 @@ function SchedulePage() {
       .catch((err) => setError(err.message));
   }
 
-  useEffect(() => {
-    listTemplates()
-      .then(setTemplates)
-      .catch((err) => setError(err.message));
-    getRoomSummaries()
-      .then(setAllRooms)
-      .catch((err) => setError(err.message));
-    getPolicyGroups()
+  function reloadPolicies() {
+    return listPolicies()
       .then(setPolicyGroups)
       .catch((err) => setError(err.message));
+  }
+
+  useEffect(() => {
+    async function load() {
+      setLoading(true);
+      setError(null);
+      try {
+        const [baseList, buildingList, roomList, roomSummaries, templateList, groups] = await Promise.all([
+          listBases(),
+          listBuildings(),
+          listRooms(),
+          getRoomSummaries(),
+          listTemplates(),
+          listPolicies(),
+        ]);
+        setBases(baseList);
+        setBuildings(buildingList);
+        setRooms(roomList);
+        setAllRooms(roomSummaries);
+        setTemplates(templateList);
+        setPolicyGroups(groups);
+      } catch (err) {
+        setError(err.message);
+      } finally {
+        setLoading(false);
+      }
+    }
+
+    load();
     loadActiveOverrides();
   }, []);
 
@@ -74,168 +103,157 @@ function SchedulePage() {
     }
   }
 
-  useEffect(() => {
-    async function resetAndLoadOptions() {
-      setDirectSchedule(null);
-      setEffectivePolicy(null);
-      setDoorState(null);
-      setReportedLockState(null);
-
-      try {
-        const options =
-          scopeType === 'base' ? await listBases() : scopeType === 'building' ? await listBuildings() : await listRooms();
-        setScopeOptions(options);
-
-        if (scopeType === 'room' && pendingScopeCode && options.some((o) => o.room_code === pendingScopeCode)) {
-          setScopeCode(pendingScopeCode);
-        } else {
-          setScopeCode('');
-        }
-        setPendingScopeCode(null);
-      } catch (err) {
-        setError(err.message);
-      }
-    }
-
-    resetAndLoadOptions();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [scopeType]);
-
-  function handleSelectRoomFromOverview(roomCode) {
-    if (scopeType === 'room') {
-      setScopeCode(roomCode);
-    } else {
-      setPendingScopeCode(roomCode);
-      setScopeType('room');
+  async function handleCreatePolicy() {
+    if (!newPolicyName.trim()) return;
+    setCreatingPolicy(true);
+    setError(null);
+    try {
+      await createPolicy(newPolicyName.trim());
+      setNewPolicyName('');
+      await reloadPolicies();
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setCreatingPolicy(false);
     }
   }
 
+  function handleTempScopeTypeChange(nextType) {
+    setTempScopeType(nextType);
+    setTempScopeCode(nextType === 'global' ? 'ALL' : '');
+  }
+
+  function handleSelectRoomFromOverview(roomCode) {
+    setTempScopeType('room');
+    setTempScopeCode(roomCode);
+  }
+
   useEffect(() => {
-    if (!scopeCode) return;
+    async function resetTempSectionState() {
+      setTempWeekSlots(emptyWeekSlots());
+      setActiveTempPolicy(null);
+      setTempDoorState(null);
+      setTempReportedLockState(null);
+      setTempActiveOverride(null);
+    }
+
+    if (!tempScopeCode) {
+      resetTempSectionState();
+      return;
+    }
 
     async function load() {
-      setLoading(true);
-      setError(null);
+      setTempLoading(true);
+      setTempError(null);
       try {
-        const schedule = await getSchedule(scopeType, scopeCode);
-        setDirectSchedule(schedule);
-        setWeekSlots(schedule ? schedule.week_slots : emptyWeekSlots());
+        const existing = await getTempPolicy(tempScopeType, tempScopeCode);
+        setActiveTempPolicy(existing);
 
-        if (scopeType === 'room') {
-          const policy = await getEffectivePolicy(scopeCode);
-          setEffectivePolicy(policy);
+        if (tempScopeType === 'room') {
+          const policy = await getEffectivePolicy(tempScopeCode);
+          setTempActiveOverride(policy.active_override);
+          if (!existing) {
+            setTempWeekSlots(policy.effective_schedule ? policy.effective_schedule.week_slots : emptyWeekSlots());
+          }
 
-          const room = scopeOptions.find((r) => r.room_code === scopeCode);
+          const room = rooms.find((r) => r.room_code === tempScopeCode);
           if (room) {
-            const roomSummaries = await getRoomSummaries(room.building_code);
-            const summary = roomSummaries.find((r) => r.room_code === scopeCode);
-            setDoorState(summary ? summary.last_door_state : null);
-            setReportedLockState(summary ? summary.reported_lock_state : null);
+            const summaries = await getRoomSummaries(room.building_code);
+            const summary = summaries.find((r) => r.room_code === tempScopeCode);
+            setTempDoorState(summary ? summary.last_door_state : null);
+            setTempReportedLockState(summary ? summary.reported_lock_state : null);
           }
         } else {
-          setEffectivePolicy(null);
-          setDoorState(null);
-          setReportedLockState(null);
+          setTempActiveOverride(null);
+          setTempDoorState(null);
+          setTempReportedLockState(null);
+          if (!existing) setTempWeekSlots(emptyWeekSlots());
         }
+
+        if (existing) setTempWeekSlots(existing.week_slots);
       } catch (err) {
-        setError(err.message);
+        setTempError(err.message);
       } finally {
-        setLoading(false);
+        setTempLoading(false);
       }
     }
 
     load();
-  }, [scopeType, scopeCode, scopeOptions]);
+  }, [tempScopeType, tempScopeCode, rooms]);
 
-  async function refreshScopeData() {
-    const schedule = await getSchedule(scopeType, scopeCode);
-    setDirectSchedule(schedule);
-    setWeekSlots(schedule ? schedule.week_slots : emptyWeekSlots());
-    if (scopeType === 'room') {
-      setEffectivePolicy(await getEffectivePolicy(scopeCode));
+  async function handleSaveTempPolicy() {
+    setTempSaving(true);
+    setTempError(null);
+    try {
+      const saved = await saveTempPolicy(tempScopeType, tempScopeCode, tempWeekSlots);
+      setActiveTempPolicy(saved);
+    } catch (err) {
+      setTempError(err.message);
+    } finally {
+      setTempSaving(false);
     }
   }
 
-  async function handleSave() {
-    setSaving(true);
-    setError(null);
+  async function handleCancelTempPolicy() {
+    setTempSaving(true);
+    setTempError(null);
     try {
-      await saveSchedule(scopeType, scopeCode, weekSlots, directSchedule?.based_on_template);
-      await refreshScopeData();
+      await cancelTempPolicy(tempScopeType, tempScopeCode);
+      setActiveTempPolicy(null);
+      if (tempScopeType === 'room') {
+        const policy = await getEffectivePolicy(tempScopeCode);
+        setTempWeekSlots(policy.effective_schedule ? policy.effective_schedule.week_slots : emptyWeekSlots());
+      } else {
+        setTempWeekSlots(emptyWeekSlots());
+      }
     } catch (err) {
-      setError(err.message);
+      setTempError(err.message);
     } finally {
-      setSaving(false);
-    }
-  }
-
-  async function handleResetFromTemplate() {
-    if (!selectedTemplate) return;
-    setSaving(true);
-    setError(null);
-    try {
-      await resetFromTemplate(scopeType, scopeCode, selectedTemplate);
-      await refreshScopeData();
-    } catch (err) {
-      setError(err.message);
-    } finally {
-      setSaving(false);
-    }
-  }
-
-  async function handleDeleteDirect() {
-    if (!window.confirm('이 스코프의 직접 설정을 삭제하고 상위 상속으로 되돌리시겠습니까?')) return;
-    setSaving(true);
-    setError(null);
-    try {
-      await deleteSchedule(scopeType, scopeCode);
-      await refreshScopeData();
-    } catch (err) {
-      setError(err.message);
-    } finally {
-      setSaving(false);
+      setTempSaving(false);
     }
   }
 
   async function handleCreateOverride() {
-    setSaving(true);
-    setError(null);
+    setTempSaving(true);
+    setTempError(null);
     try {
-      await createOverride(scopeCode, 'open', Number(durationMinutes));
-      setEffectivePolicy(await getEffectivePolicy(scopeCode));
+      await createOverride(tempScopeCode, 'open', Number(durationMinutes));
+      const policy = await getEffectivePolicy(tempScopeCode);
+      setTempActiveOverride(policy.active_override);
       await loadActiveOverrides();
     } catch (err) {
-      setError(err.message);
+      setTempError(err.message);
     } finally {
-      setSaving(false);
+      setTempSaving(false);
     }
   }
 
   async function handleCancelOverride() {
-    if (!effectivePolicy?.active_override) return;
-    setSaving(true);
-    setError(null);
+    if (!tempActiveOverride) return;
+    setTempSaving(true);
+    setTempError(null);
     try {
-      await cancelOverride(effectivePolicy.active_override.id);
-      setEffectivePolicy(await getEffectivePolicy(scopeCode));
+      await cancelOverride(tempActiveOverride.id);
+      const policy = await getEffectivePolicy(tempScopeCode);
+      setTempActiveOverride(policy.active_override);
       await loadActiveOverrides();
     } catch (err) {
-      setError(err.message);
+      setTempError(err.message);
     } finally {
-      setSaving(false);
+      setTempSaving(false);
     }
   }
 
-  const optionLabel = (option) => {
-    if (scopeType === 'base') return `${option.base_code} — ${option.base_name}`;
-    if (scopeType === 'building') return `${option.building_code} — ${option.building_name}`;
-    return `${option.room_code} — ${option.room_name || '(이름 없음)'}`;
-  };
-  const optionCode = (option) => {
-    if (scopeType === 'base') return option.base_code;
-    if (scopeType === 'building') return option.building_code;
-    return option.room_code;
-  };
+  const tempScopeOptions =
+    tempScopeType === 'base'
+      ? bases.map((b) => ({ code: b.base_code, label: `${b.base_code} — ${b.base_name}` }))
+      : tempScopeType === 'building'
+        ? buildings.map((b) => ({ code: b.building_code, label: `${b.building_code} — ${b.building_name}` }))
+        : tempScopeType === 'room'
+          ? rooms.map((r) => ({ code: r.room_code, label: `${r.room_code} — ${r.room_name || '(이름 없음)'}` }))
+          : [];
+
+  if (loading) return <p>불러오는 중...</p>;
 
   return (
     <div>
@@ -251,57 +269,75 @@ function SchedulePage() {
       {error && <div className="banner-error">{error}</div>}
 
       <h3 className="section-title">현재 정책 적용 현황</h3>
+      <div className="page-toolbar">
+        <input
+          type="text"
+          placeholder="새 정책 이름"
+          value={newPolicyName}
+          onChange={(e) => setNewPolicyName(e.target.value)}
+        />
+        <button
+          type="button"
+          className="primary"
+          disabled={creatingPolicy || !newPolicyName.trim()}
+          onClick={handleCreatePolicy}
+        >
+          + 새 정책
+        </button>
+      </div>
       {policyGroups.map((group) => (
         <PolicyGroupBlock
-          key={`${group.scope_type}:${group.scope_code}`}
+          key={group.id}
           group={group}
           allRooms={allRooms}
           activeOverrides={activeOverrides}
           onOverrideChanged={loadActiveOverrides}
+          onPoliciesChanged={reloadPolicies}
+          bases={bases}
+          buildings={buildings}
+          rooms={rooms}
+          templates={templates}
         />
       ))}
 
       <h3 className="section-title">전체 내무반 현황</h3>
       <RoomStatusGrid rooms={allRooms} onSelectRoom={handleSelectRoomFromOverview} />
 
-      <h3 className="section-title">정책 편집</h3>
+      <h3 className="section-title">임시 정책 적용 (이번 주만)</h3>
+      <p className="breadcrumb">
+        저장 즉시 적용되고, 이번 주가 끝나면(다음 일요일 0시) 자동으로 원래 정책으로 돌아갑니다.
+      </p>
+
       <div className="page-toolbar">
-        <select
-          value={scopeType}
-          onChange={(e) => setScopeType(e.target.value)}
-        >
+        <select value={tempScopeType} onChange={(e) => handleTempScopeTypeChange(e.target.value)}>
           <option value="base">중대 단위</option>
           <option value="building">소대 단위</option>
           <option value="room">내무반 단위</option>
+          <option value="global">전체</option>
         </select>
-        <select value={scopeCode} onChange={(e) => setScopeCode(e.target.value)}>
-          <option value="">{SCOPE_TYPE_LABELS[scopeType]} 선택</option>
-          {scopeOptions.map((option) => (
-            <option key={optionCode(option)} value={optionCode(option)}>
-              {optionLabel(option)}
-            </option>
-          ))}
-        </select>
+        {tempScopeType !== 'global' && (
+          <select value={tempScopeCode} onChange={(e) => setTempScopeCode(e.target.value)}>
+            <option value="">{SCOPE_TYPE_LABELS[tempScopeType]} 선택</option>
+            {tempScopeOptions.map((option) => (
+              <option key={option.code} value={option.code}>
+                {option.label}
+              </option>
+            ))}
+          </select>
+        )}
       </div>
 
-      {loading && <p>불러오는 중...</p>}
+      {tempError && <div className="banner-error">{tempError}</div>}
 
-      {!loading && scopeCode && (
+      {tempScopeCode && (
         <>
-          {scopeType === 'room' && (
+          {tempScopeType === 'room' && (
             <div className="page-toolbar">
               <span>
-                현재 적용 정책:{' '}
-                {effectivePolicy?.effective_schedule
-                  ? `${effectivePolicy.effective_schedule.scope_type}(${effectivePolicy.effective_schedule.scope_code})에서 상속`
-                  : '없음'}
-              </span>
-              <span className="spacer" />
-              <span>
                 게이트웨이 보고 설정:{' '}
-                {reportedLockState ? (
-                  <span className={`badge ${reportedLockState === 'unlocked' ? 'badge-online' : 'badge-offline'}`}>
-                    {LOCK_STATE_LABEL[reportedLockState]}
+                {tempReportedLockState ? (
+                  <span className={`badge ${tempReportedLockState === 'unlocked' ? 'badge-online' : 'badge-offline'}`}>
+                    {LOCK_STATE_LABEL[tempReportedLockState]}
                   </span>
                 ) : (
                   '미보고'
@@ -310,49 +346,43 @@ function SchedulePage() {
               <span className="spacer" />
               <span>
                 실제 도어 상태:{' '}
-                <span className={`badge ${doorState === 'open' ? 'badge-online' : 'badge-offline'}`}>
-                  {doorState ? DOOR_STATE_LABEL[doorState] : '기록 없음'}
+                <span className={`badge ${tempDoorState === 'open' ? 'badge-online' : 'badge-offline'}`}>
+                  {tempDoorState ? DOOR_STATE_LABEL[tempDoorState] : '기록 없음'}
                 </span>
               </span>
             </div>
           )}
 
-          <h3 className="section-title">
-            {SCOPE_TYPE_LABELS[scopeType]} 직접 설정 {directSchedule ? '' : '(현재 없음 — 상위 상속 적용 중)'}
-          </h3>
-          <WeekSlotGrid value={weekSlots} onChange={setWeekSlots} />
+          {tempLoading ? (
+            <p>불러오는 중...</p>
+          ) : (
+            <>
+              {activeTempPolicy && (
+                <div className="page-toolbar">
+                  <span>활성 임시정책 — {formatDateTime(activeTempPolicy.valid_until)}까지(다음 주부터 원래 정책 복귀)</span>
+                  <button type="button" disabled={tempSaving} onClick={handleCancelTempPolicy}>
+                    지금 취소
+                  </button>
+                </div>
+              )}
 
-          <div className="form-actions">
-            <button type="button" className="primary" disabled={saving} onClick={handleSave}>
-              저장 (실시간 설정)
-            </button>
-            <select value={selectedTemplate} onChange={(e) => setSelectedTemplate(e.target.value)}>
-              <option value="">템플릿 선택</option>
-              {templates.map((t) => (
-                <option key={t.template_code} value={t.template_code}>
-                  {t.template_code} — {t.template_name}
-                </option>
-              ))}
-            </select>
-            <button type="button" disabled={saving || !selectedTemplate} onClick={handleResetFromTemplate}>
-              기본 정책으로 환원
-            </button>
-            {directSchedule && (
-              <button type="button" disabled={saving} onClick={handleDeleteDirect}>
-                직접 설정 삭제
-              </button>
-            )}
-          </div>
+              <WeekSlotGrid value={tempWeekSlots} onChange={setTempWeekSlots} />
 
-          {scopeType === 'room' && (
+              <div className="form-actions">
+                <button type="button" className="primary" disabled={tempSaving} onClick={handleSaveTempPolicy}>
+                  이번 주만 임시 적용
+                </button>
+              </div>
+            </>
+          )}
+
+          {tempScopeType === 'room' && !tempLoading && (
             <>
               <h3 className="section-title">즉각 실행</h3>
-              {effectivePolicy?.active_override ? (
+              {tempActiveOverride ? (
                 <div className="page-toolbar">
-                  <span>
-                    활성 즉각 개방 — {formatDateTime(effectivePolicy.active_override.expires_at)}까지
-                  </span>
-                  <button type="button" disabled={saving} onClick={handleCancelOverride}>
+                  <span>활성 즉각 개방 — {formatDateTime(tempActiveOverride.expires_at)}까지</span>
+                  <button type="button" disabled={tempSaving} onClick={handleCancelOverride}>
                     취소
                   </button>
                 </div>
@@ -367,7 +397,7 @@ function SchedulePage() {
                     style={{ width: 80 }}
                   />
                   <span>분 동안</span>
-                  <button type="button" className="primary" disabled={saving} onClick={handleCreateOverride}>
+                  <button type="button" className="primary" disabled={tempSaving} onClick={handleCreateOverride}>
                     즉시 개방
                   </button>
                 </div>

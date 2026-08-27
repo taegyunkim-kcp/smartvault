@@ -40,7 +40,7 @@ app.use('/api/rfid-tags', require('./routes/rfidTags'));
 app.use('/api/ingest', require('./routes/ingest'));
 app.use('/api/bridge', require('./routes/bridgePolicy'));
 app.use('/api/door-schedule-templates', require('./routes/doorScheduleTemplates'));
-app.use('/api/door-schedules', require('./routes/doorSchedules'));
+app.use('/api/door-policies', require('./routes/doorPolicies'));
 app.use('/api/door-overrides', require('./routes/doorOverrides'));
 app.use('/api/events', require('./routes/events'));
 

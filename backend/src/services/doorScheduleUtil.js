@@ -13,7 +13,7 @@ function isLocked({ effective_schedule: effectiveSchedule, active_override: acti
     return false;
   }
 
-  // DB(door_schedules)와 마찬가지로 UTC 기준으로 계산한다 — config/db.js의
+  // DB(door_policies/door_temp_policies)와 마찬가지로 UTC 기준으로 계산한다 — config/db.js의
   // timezone: 'Z' 설정과 일관성을 맞추기 위해 로컬 타임존 메서드 대신 UTC 메서드 사용.
   const now = new Date();
   const dayKey = DAY_KEYS[now.getUTCDay()];

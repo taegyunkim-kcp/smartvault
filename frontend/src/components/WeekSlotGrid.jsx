@@ -23,14 +23,29 @@ function WeekSlotGrid({ value, onChange, readOnly }) {
     onChange({ ...weekSlots, [day]: new Array(48).fill(!allLocked) });
   }
 
+  function toggleHour(hour) {
+    if (readOnly) return;
+    const first = hour * 2;
+    const second = hour * 2 + 1;
+    const allLocked = DAY_KEYS.every((day) => weekSlots[day][first] && weekSlots[day][second]);
+    const next = {};
+    for (const day of DAY_KEYS) {
+      const nextDay = weekSlots[day].slice();
+      nextDay[first] = !allLocked;
+      nextDay[second] = !allLocked;
+      next[day] = nextDay;
+    }
+    onChange({ ...weekSlots, ...next });
+  }
+
   return (
     <div className="week-slot-grid">
       <div className="week-slot-header">
         <div className="week-slot-day-label" />
         {Array.from({ length: 24 }, (_, hour) => (
-          <div key={hour} className="week-slot-hour-label">
+          <button key={hour} type="button" className="week-slot-hour-label" onClick={() => toggleHour(hour)}>
             {hour}
-          </div>
+          </button>
         ))}
       </div>
       {DAY_KEYS.map((day) => (
@@ -52,7 +67,8 @@ function WeekSlotGrid({ value, onChange, readOnly }) {
         </div>
       ))}
       <p className="week-slot-legend">
-        색칠된 칸 = 잠김(closed) 유지 시간대. 칸 클릭으로 토글, 요일 클릭으로 하루 전체 토글.
+        색칠된 칸 = 잠김(closed) 유지 시간대. 칸 클릭으로 토글, 요일 클릭으로 하루 전체 토글, 시간
+        헤더 클릭으로 그 시간대 전체 요일 토글.
       </p>
     </div>
   );

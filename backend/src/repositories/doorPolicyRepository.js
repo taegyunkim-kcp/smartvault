@@ -11,14 +11,6 @@ async function findRoomHierarchy(roomCode) {
   return rows[0] || null;
 }
 
-async function findSchedule(scopeType, scopeCode) {
-  const [rows] = await pool.execute(
-    `SELECT * FROM door_schedules WHERE scope_type = :scopeType AND scope_code = :scopeCode`,
-    { scopeType, scopeCode }
-  );
-  return rows[0] || null;
-}
-
 async function findActiveOverride(roomCode) {
   // expires_at > NOW() (엄격 부등호)여야 한다. 취소(door_overrides.cancel)는
   // expires_at을 그 순간의 NOW()로 당기는데, MySQL DATETIME은 초 단위라
@@ -34,4 +26,4 @@ async function findActiveOverride(roomCode) {
   return rows[0] || null;
 }
 
-module.exports = { findRoomHierarchy, findSchedule, findActiveOverride };
+module.exports = { findRoomHierarchy, findActiveOverride };

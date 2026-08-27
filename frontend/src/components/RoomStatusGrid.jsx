@@ -23,7 +23,7 @@ function roomTitle(room, override) {
   return title;
 }
 
-function RoomStatusGrid({ rooms, onSelectRoom, overridesByRoomCode = {}, now = new Date() }) {
+function RoomStatusGrid({ rooms, onSelectRoom, overridesByRoomCode = {}, now = new Date(), draggable = false }) {
   if (rooms.length === 0) {
     return <div className="empty-state">등록된 내무반이 없습니다.</div>;
   }
@@ -41,6 +41,8 @@ function RoomStatusGrid({ rooms, onSelectRoom, overridesByRoomCode = {}, now = n
               className={`room-tile door-${room.last_door_state || 'unknown'}${onSelectRoom ? ' clickable' : ''}`}
               title={roomTitle(room, override)}
               onClick={onSelectRoom ? () => onSelectRoom(room.room_code) : undefined}
+              draggable={draggable}
+              onDragStart={draggable ? (e) => e.dataTransfer.setData('text/room-code', room.room_code) : undefined}
             >
               <span className={`room-tile-reported lock-${room.reported_lock_state || 'unknown'}`} />
               <span className={`room-tile-scheduled scheduled-${room.scheduled_lock_state || 'unknown'}`} />

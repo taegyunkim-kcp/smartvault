@@ -97,13 +97,32 @@ async function clearPreviousDemoData(conn) {
     await conn.query(`DELETE FROM door_events WHERE gateway_id IN (?)`, [demoGatewayIds]);
   }
   await conn.query(`DELETE FROM rfid_events WHERE rfid_uid LIKE 'DEMO-UID-%'`);
-  await conn.query(`DELETE FROM door_schedules WHERE scope_type = 'room' AND scope_code IN (?)`, [
+
+  // 이름으로 데모 정책을 찾는다(멤버십 기준이면, 관리자가 UI에서 다른 방을 추가했거나
+  // 드래그로 멤버를 다 빼버린 경우를 놓친다 — 이름은 그런 변경과 무관하게 안정적인 식별자).
+  // scope_code 필터 없이 그 정책에 딸린 모든 door_policy_scopes를 먼저 지워야 FK 위반이 안 난다.
+  const demoPolicyNames = LOCKED_SCHEDULE_ROOMS.map((roomCode) => `${roomCode} 데모 정책`);
+  const [demoPolicyRows] = await conn.query(`SELECT id FROM door_policies WHERE name IN (?)`, [demoPolicyNames]);
+  if (demoPolicyRows.length > 0) {
+    const demoPolicyIds = demoPolicyRows.map((r) => r.id);
+    await conn.query(`DELETE FROM door_policy_scopes WHERE policy_id IN (?)`, [demoPolicyIds]);
+    await conn.query(`DELETE FROM door_policies WHERE id IN (?)`, [demoPolicyIds]);
+  }
+  await conn.query(`DELETE FROM door_temp_policies WHERE scope_type = 'room' AND scope_code IN (?)`, [
     LOCKED_SCHEDULE_ROOMS,
   ]);
+
   await conn.query(`DELETE FROM personnel WHERE service_number LIKE '26-2000%'`);
   if (demoGatewayIds.length > 0) {
     await conn.query(`DELETE FROM gateways WHERE gateway_id IN (?)`, [demoGatewayIds]);
   }
+  await conn.query(
+    `DELETE o FROM door_overrides o
+     JOIN rooms r ON r.room_code = o.room_code
+     JOIN buildings bl ON bl.building_code = r.building_code
+     WHERE bl.base_code IN (?)`,
+    [demoBaseCodes]
+  );
   await conn.query(
     `DELETE r FROM rooms r
      JOIN buildings bl ON bl.building_code = r.building_code
@@ -231,9 +250,13 @@ async function seed() {
 
     const weekSlots = buildAlwaysCurrentlyLockedWeekSlots();
     for (const roomCode of LOCKED_SCHEDULE_ROOMS) {
+      const [result] = await conn.query(`INSERT INTO door_policies (name, week_slots) VALUES (?, ?)`, [
+        `${roomCode} 데모 정책`,
+        JSON.stringify(weekSlots),
+      ]);
       await conn.query(
-        `INSERT INTO door_schedules (scope_type, scope_code, week_slots) VALUES ('room', ?, ?)`,
-        [roomCode, JSON.stringify(weekSlots)]
+        `INSERT INTO door_policy_scopes (policy_id, scope_type, scope_code) VALUES (?, 'room', ?)`,
+        [result.insertId, roomCode]
       );
     }
 
