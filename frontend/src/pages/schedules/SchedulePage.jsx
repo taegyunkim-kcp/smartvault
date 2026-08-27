@@ -8,6 +8,7 @@ import {
   createPolicy,
   getEffectivePolicy,
   getTempPolicy,
+  listActiveTempPolicyGroups,
   listPolicies,
   saveTempPolicy,
 } from '../../api/doorPolicies';
@@ -33,6 +34,7 @@ function SchedulePage() {
   const [templates, setTemplates] = useState([]);
   const [showTemplateModal, setShowTemplateModal] = useState(false);
   const [policyGroups, setPolicyGroups] = useState([]);
+  const [tempPolicyGroups, setTempPolicyGroups] = useState([]);
   const [newPolicyName, setNewPolicyName] = useState('');
   const [creatingPolicy, setCreatingPolicy] = useState(false);
   const [activeOverrides, setActiveOverrides] = useState([]);
@@ -59,8 +61,11 @@ function SchedulePage() {
   }
 
   function reloadPolicies() {
-    return listPolicies()
-      .then(setPolicyGroups)
+    return Promise.all([listPolicies(), listActiveTempPolicyGroups()])
+      .then(([groups, tempGroups]) => {
+        setPolicyGroups(groups);
+        setTempPolicyGroups(tempGroups);
+      })
       .catch((err) => setError(err.message));
   }
 
@@ -69,13 +74,14 @@ function SchedulePage() {
       setLoading(true);
       setError(null);
       try {
-        const [baseList, buildingList, roomList, roomSummaries, templateList, groups] = await Promise.all([
+        const [baseList, buildingList, roomList, roomSummaries, templateList, groups, tempGroups] = await Promise.all([
           listBases(),
           listBuildings(),
           listRooms(),
           getRoomSummaries(),
           listTemplates(),
           listPolicies(),
+          listActiveTempPolicyGroups(),
         ]);
         setBases(baseList);
         setBuildings(buildingList);
@@ -83,6 +89,7 @@ function SchedulePage() {
         setAllRooms(roomSummaries);
         setTemplates(templateList);
         setPolicyGroups(groups);
+        setTempPolicyGroups(tempGroups);
       } catch (err) {
         setError(err.message);
       } finally {
@@ -187,6 +194,7 @@ function SchedulePage() {
     try {
       const saved = await saveTempPolicy(tempScopeType, tempScopeCode, tempWeekSlots);
       setActiveTempPolicy(saved);
+      await reloadPolicies();
     } catch (err) {
       setTempError(err.message);
     } finally {
@@ -206,6 +214,7 @@ function SchedulePage() {
       } else {
         setTempWeekSlots(emptyWeekSlots());
       }
+      await reloadPolicies();
     } catch (err) {
       setTempError(err.message);
     } finally {
@@ -285,7 +294,7 @@ function SchedulePage() {
           + 새 정책
         </button>
       </div>
-      {policyGroups.map((group) => (
+      {[...policyGroups, ...tempPolicyGroups].map((group) => (
         <PolicyGroupBlock
           key={group.id}
           group={group}
@@ -366,7 +375,7 @@ function SchedulePage() {
                 </div>
               )}
 
-              <WeekSlotGrid value={tempWeekSlots} onChange={setTempWeekSlots} />
+              <WeekSlotGrid value={tempWeekSlots} onChange={setTempWeekSlots} tempMode />
 
               <div className="form-actions">
                 <button type="button" className="primary" disabled={tempSaving} onClick={handleSaveTempPolicy}>

@@ -4,6 +4,10 @@ function listPolicies() {
   return request('/api/door-policies');
 }
 
+function listActiveTempPolicyGroups() {
+  return request('/api/door-policies/temp-groups');
+}
+
 function createPolicy(name) {
   return request('/api/door-policies', { method: 'POST', body: { name } });
 }
@@ -57,6 +61,7 @@ function cancelTempPolicy(scopeType, scopeCode) {
 
 export {
   listPolicies,
+  listActiveTempPolicyGroups,
   createPolicy,
   updatePolicyContent,
   renamePolicy,

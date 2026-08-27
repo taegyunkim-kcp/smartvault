@@ -12,6 +12,14 @@ async function find(scopeType, scopeCode) {
   return rows[0] || null;
 }
 
+// "정책 적용 현황"에 현재 활성인 임시정책을 전부 표시하기 위한 용도.
+async function findAllActive() {
+  const [rows] = await pool.execute(
+    `SELECT * FROM door_temp_policies WHERE valid_from <= NOW() AND valid_until > NOW()`
+  );
+  return rows;
+}
+
 async function findRaw(scopeType, scopeCode) {
   const [rows] = await pool.execute(
     `SELECT * FROM door_temp_policies WHERE scope_type = :scopeType AND scope_code = :scopeCode`,
@@ -56,4 +64,4 @@ async function remove(scopeType, scopeCode) {
   return result.affectedRows > 0;
 }
 
-module.exports = { find, findRaw, upsert, remove };
+module.exports = { find, findRaw, findAllActive, upsert, remove };

@@ -21,7 +21,7 @@
 }
 
 .week-slot-hour-label {
-  width: 24px;
+  width: 12px;
   flex-shrink: 0;
   font-size: 10px;
   opacity: 0.6;
@@ -30,6 +30,12 @@
   cursor: pointer;
   padding: 2px 0;
   color: inherit;
+  overflow: visible;
+  white-space: nowrap;
+}
+
+.week-slot-hour-label:not(.week-slot-hour-label-start) {
+  opacity: 0.25;
 }
 
 .week-slot-hour-label:hover {
@@ -53,6 +59,24 @@
 .week-slot-cell.locked {
   background: var(--danger);
   border-color: var(--danger);
+}
+
+/* 임시정책(이번 주만) 내용을 보여줄 때(비교 대상 없이 통째로) — 영구 정책과 헷갈리지 않도록
+   다른 색(주황)을 쓴다. 예: 별도 UI로 만든 임시정책 카드, 편집 대상 정책이 없는 경우. */
+.week-slot-grid-temp .week-slot-cell.locked {
+  background: #d97706;
+  border-color: #d97706;
+}
+
+/* baseValue(영구 정책)와 비교해서 다른 칸만 표시할 때 — 원래(빨강)와 그대로면 빨강 유지,
+   이번 주만 새로 잠근 칸만 주황으로 채우고, 이번 주만 새로 연 칸은 주황 테두리로 표시한다. */
+.week-slot-cell.locked.temp-diff {
+  background: #d97706;
+  border-color: #d97706;
+}
+
+.week-slot-cell.temp-diff:not(.locked) {
+  border: 2px solid #d97706;
 }
 
 .week-slot-cell:hover {

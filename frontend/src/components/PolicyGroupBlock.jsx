@@ -2,7 +2,16 @@ import { useEffect, useState } from 'react';
 import WeekSlotGrid from './WeekSlotGrid';
 import RoomStatusGrid from './RoomStatusGrid';
 import { createOverride, cancelOverride } from '../api/doorOverrides';
-import { addMember, removeMember, renamePolicy, updatePolicyContent, deletePolicy } from '../api/doorPolicies';
+import {
+  addMember,
+  removeMember,
+  renamePolicy,
+  updatePolicyContent,
+  deletePolicy,
+  saveTempPolicy,
+  cancelTempPolicy,
+} from '../api/doorPolicies';
+import { formatDateTime } from '../utils/formatDateTime';
 import '../styles/crud.css';
 import './policyGroupBlock.css';
 
@@ -54,6 +63,7 @@ function PolicyGroupBlock({
   const [error, setError] = useState(null);
   const [nameDraft, setNameDraft] = useState(group.name);
   const [weekSlotsDraft, setWeekSlotsDraft] = useState(group.week_slots);
+  const [tempDraft, setTempDraft] = useState(group.active_temp ? group.active_temp.week_slots : group.week_slots);
   const [saving, setSaving] = useState(false);
   const [newMemberScopeType, setNewMemberScopeType] = useState('room');
   const [newMemberScopeCode, setNewMemberScopeCode] = useState('');
@@ -66,9 +76,10 @@ function PolicyGroupBlock({
     async function syncDraftsFromGroup() {
       setNameDraft(group.name);
       setWeekSlotsDraft(group.week_slots);
+      setTempDraft(group.active_temp ? group.active_temp.week_slots : group.week_slots);
     }
     syncDraftsFromGroup();
-  }, [group.name, group.week_slots]);
+  }, [group.name, group.week_slots, group.active_temp]);
 
   const groupRoomCodes = new Set(group.rooms.map((room) => room.room_code));
   const groupRoomSummaries = allRooms.filter((room) => groupRoomCodes.has(room.room_code));
@@ -106,7 +117,7 @@ function PolicyGroupBlock({
   }
 
   function openEdit() {
-    setEditing(true);
+    setEditing((v) => !v);
     setExpanded(false);
   }
 
@@ -160,7 +171,11 @@ function PolicyGroupBlock({
   }
 
   async function handleDeletePolicy() {
-    if (!window.confirm(`"${group.name}" 정책을 삭제하시겠습니까?`)) return;
+    const confirmMessage =
+      group.direct_scopes.length > 0
+        ? `"${group.name}" 정책을 삭제하시겠습니까? 소속된 조직/내무반(${group.direct_scopes.length}개)은 기본 정책으로 자동 복귀합니다.`
+        : `"${group.name}" 정책을 삭제하시겠습니까?`;
+    if (!window.confirm(confirmMessage)) return;
     setSaving(true);
     setError(null);
     try {
@@ -172,18 +187,64 @@ function PolicyGroupBlock({
     }
   }
 
+  // 이 카드가 실제로 적용된 조직/방(기본 정책이면 global까지) 목록 — 임시정책 적용/취소 대상.
+  function tempTargetScopes() {
+    return isGlobal ? [...group.direct_scopes, { scope_type: 'global', scope_code: 'ALL' }] : group.direct_scopes;
+  }
+
+  // "시간표 보기"에서 칸을 여러 개 선택해두고 누르는 버튼 — 정책 자체(편집/저장)는 그대로 두고,
+  // 지금까지 고른 슬롯 조합을 이 정책의 소속 조직/방 전체에 이번 주만 유효한 임시정책으로 적용한다.
+  async function handleApplyTempDraft() {
+    const scopes = tempTargetScopes();
+    if (scopes.length === 0) {
+      setError('이 정책에 속한 조직/내무반이 없어 임시정책을 적용할 수 없습니다.');
+      return;
+    }
+    setSaving(true);
+    setError(null);
+    try {
+      for (const scope of scopes) {
+        await saveTempPolicy(scope.scope_type, scope.scope_code, tempDraft);
+      }
+      await onPoliciesChanged();
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setSaving(false);
+    }
+  }
+
+  // 별도 UI로 만들어진 임시정책 카드(group.is_temp)는 자기 scope 하나를 취소하고,
+  // 정책 카드 안에 인라인으로 뜬 임시정책(group.active_temp)은 그 정책의 소속 스코프 전체를 취소한다.
+  async function handleCancelActiveTemp() {
+    const scopes = group.is_temp
+      ? [{ scope_type: group.scope_type, scope_code: group.scope_code }]
+      : tempTargetScopes();
+    setSaving(true);
+    setError(null);
+    try {
+      for (const scope of scopes) {
+        await cancelTempPolicy(scope.scope_type, scope.scope_code);
+      }
+      await onPoliciesChanged();
+    } catch (err) {
+      setError(err.message);
+      setSaving(false);
+    }
+  }
+
   async function handleDrop(e) {
     e.preventDefault();
     setDragOver(false);
+    if (group.is_temp) return;
     const roomCode = e.dataTransfer.getData('text/room-code');
     if (!roomCode) return;
     setError(null);
     try {
-      if (isGlobal) {
-        await removeMember('room', roomCode);
-      } else {
-        await addMember(group.id, 'room', roomCode);
-      }
+      // 기본 정책도 door_policies 행 하나일 뿐이라 그냥 addMember로 처리한다 — 상속으로만
+      // 이 카드에 있던 방(자기 소속 scope 행이 없는 방)을 드래그해도 명시적으로 새 행이
+      // 생기면서 확실히 옮겨진다(removeMember는 지울 행이 애초에 없으면 조용히 아무 효과가 없었음).
+      await addMember(group.id, 'room', roomCode);
       await onPoliciesChanged();
     } catch (err) {
       setError(err.message);
@@ -194,6 +255,7 @@ function PolicyGroupBlock({
     <div
       className={`policy-group-block${dragOver ? ' drag-over' : ''}`}
       onDragOver={(e) => {
+        if (group.is_temp) return;
         e.preventDefault();
         setDragOver(true);
       }}
@@ -205,24 +267,33 @@ function PolicyGroupBlock({
         <span className={`badge ${group.currently_locked ? 'badge-offline' : 'badge-online'}`}>
           {group.currently_locked ? '잠김' : '열림 허용'}
         </span>
+        {!group.is_temp && group.active_temp && <span className="badge badge-temp">임시정책 적용 중</span>}
         {group.next_change_at && (
           <span className="policy-group-countdown">
             {formatRemaining(new Date(group.next_change_at) - now)}
           </span>
         )}
-        <button type="button" className="policy-group-toggle" onClick={openEdit}>
-          {editing ? '편집 닫기' : '편집'}
-        </button>
+        {!group.is_temp && (
+          <button type="button" className="policy-group-toggle" onClick={openEdit}>
+            {editing ? '편집 닫기' : '편집'}
+          </button>
+        )}
         <button type="button" className="policy-group-toggle" onClick={openExpanded}>
           {expanded ? '시간표 접기' : '시간표 보기'}
         </button>
+        {group.is_temp && (
+          <button type="button" className="policy-group-toggle" disabled={saving} onClick={handleCancelActiveTemp}>
+            지금 취소
+          </button>
+        )}
       </div>
 
       {error && <div className="banner-error">{error}</div>}
 
       <p className="policy-group-hint">
-        내무반 타일을 클릭하면 지금 상태의 반대로 즉각 전환됩니다(남은 슬롯 시간만큼 적용, 다시 클릭하면 취소).
-        다른 정책 카드로 드래그하면 그 정책으로 옮겨집니다.
+        {group.is_temp
+          ? `이번 주 임시정책 — ${formatDateTime(group.valid_until)}까지 적용되고 다음 주부터 원래 정책으로 자동 복귀합니다.`
+          : '내무반 타일을 클릭하면 지금 상태의 반대로 즉각 전환됩니다(남은 슬롯 시간만큼 적용, 다시 클릭하면 취소). 다른 정책 카드로 드래그하면 그 정책으로 옮겨집니다.'}
       </p>
 
       <RoomStatusGrid
@@ -230,7 +301,7 @@ function PolicyGroupBlock({
         onSelectRoom={pendingRoomCode || editing ? undefined : handleToggleRoom}
         overridesByRoomCode={overridesByRoomCode}
         now={now}
-        draggable={!editing}
+        draggable={!editing && !group.is_temp}
       />
 
       {editing && (
@@ -263,74 +334,105 @@ function PolicyGroupBlock({
               ))}
             </select>
             {!isGlobal && (
-              <button
-                type="button"
-                disabled={saving || group.direct_scopes.length > 0}
-                onClick={handleDeletePolicy}
-                title={group.direct_scopes.length > 0 ? '소속 조직/내무반이 있어 삭제할 수 없습니다' : undefined}
-              >
+              <button type="button" disabled={saving} onClick={handleDeletePolicy}>
                 정책 삭제
               </button>
             )}
           </div>
 
-          {!isGlobal && (
-            <>
-              <h5 className="policy-group-members-title">소속 조직/내무반</h5>
-              {group.direct_scopes.length === 0 ? (
-                <p className="policy-group-room-empty">직접 지정된 조직/내무반이 없습니다.</p>
-              ) : (
-                <ul className="policy-group-member-list">
-                  {group.direct_scopes.map((scope) => (
-                    <li key={`${scope.scope_type}:${scope.scope_code}`}>
-                      <span>
-                        {SCOPE_TYPE_LABELS[scope.scope_type]} {scope.scope_code}
-                      </span>
-                      <button
-                        type="button"
-                        disabled={saving}
-                        onClick={() => handleRemoveMember(scope.scope_type, scope.scope_code)}
-                      >
-                        제거
-                      </button>
-                    </li>
-                  ))}
-                </ul>
-              )}
+          <div className="policy-group-members">
+            <h5 className="policy-group-members-title">
+              {isGlobal ? '명시적으로 지정된 조직/내무반' : '소속 조직/내무반'}
+            </h5>
+            {group.direct_scopes.length === 0 ? (
+              <p className="policy-group-room-empty">
+                {isGlobal
+                  ? '명시적으로 지정된 조직/내무반이 없습니다 — 다른 정책에 속하지 않은 나머지가 전부 여기 해당합니다.'
+                  : '직접 지정된 조직/내무반이 없습니다.'}
+              </p>
+            ) : (
+              <ul className="policy-group-member-list">
+                {group.direct_scopes.map((scope) => (
+                  <li key={`${scope.scope_type}:${scope.scope_code}`}>
+                    <span>
+                      {SCOPE_TYPE_LABELS[scope.scope_type]} {scope.scope_code}
+                    </span>
+                    <button
+                      type="button"
+                      disabled={saving}
+                      onClick={() => handleRemoveMember(scope.scope_type, scope.scope_code)}
+                    >
+                      제거
+                    </button>
+                  </li>
+                ))}
+              </ul>
+            )}
 
-              <div className="page-toolbar">
-                <select
-                  value={newMemberScopeType}
-                  onChange={(e) => {
-                    setNewMemberScopeType(e.target.value);
-                    setNewMemberScopeCode('');
-                  }}
-                >
-                  <option value="base">중대</option>
-                  <option value="building">소대</option>
-                  <option value="room">내무반</option>
-                </select>
-                <select value={newMemberScopeCode} onChange={(e) => setNewMemberScopeCode(e.target.value)}>
-                  <option value="">선택하세요</option>
-                  {scopeOptionsFor(newMemberScopeType, { bases, buildings, rooms }).map((opt) => (
-                    <option key={opt.code} value={opt.code}>
-                      {opt.label}
-                    </option>
-                  ))}
-                </select>
-                <button type="button" disabled={saving || !newMemberScopeCode} onClick={handleAddMember}>
-                  이 정책에 추가
-                </button>
-              </div>
-            </>
-          )}
+            <div className="page-toolbar">
+              <select
+                value={newMemberScopeType}
+                onChange={(e) => {
+                  setNewMemberScopeType(e.target.value);
+                  setNewMemberScopeCode('');
+                }}
+              >
+                <option value="base">중대</option>
+                <option value="building">소대</option>
+                <option value="room">내무반</option>
+              </select>
+              <select value={newMemberScopeCode} onChange={(e) => setNewMemberScopeCode(e.target.value)}>
+                <option value="">선택하세요</option>
+                {scopeOptionsFor(newMemberScopeType, { bases, buildings, rooms }).map((opt) => (
+                  <option key={opt.code} value={opt.code}>
+                    {opt.label}
+                  </option>
+                ))}
+              </select>
+              <button type="button" disabled={saving || !newMemberScopeCode} onClick={handleAddMember}>
+                이 정책에 추가
+              </button>
+            </div>
+          </div>
         </div>
       )}
 
       {expanded && (
         <div className="policy-group-detail">
           <div className="policy-group-detail-grid">
-            <WeekSlotGrid value={group.week_slots} readOnly />
+            {!group.is_temp && group.active_temp && (
+              <div className="policy-group-temp-banner">
+                <span>
+                  이번 주 임시정책 적용 중 — {formatDateTime(group.active_temp.valid_until)}까지(다음 주부터 원래
+                  정책 복귀)
+                </span>
+                <button type="button" disabled={saving} onClick={handleCancelActiveTemp}>
+                  지금 취소
+                </button>
+              </div>
+            )}
+
+            <WeekSlotGrid
+              value={group.is_temp ? group.week_slots : tempDraft}
+              readOnly={group.is_temp}
+              onChange={group.is_temp ? undefined : setTempDraft}
+              tempMode={group.is_temp}
+              baseValue={group.is_temp ? undefined : group.week_slots}
+            />
+
+            {!group.is_temp && (
+              <>
+                <p className="policy-group-hint">
+                  여기서 여러 칸을 골라두고(주황색) "임시정책으로 적용"을 누르면 정책 자체는 그대로 두고 이번
+                  주만 그 내용으로 적용됩니다. 정책 내용을 영구적으로 바꾸려면 "편집"을 사용하세요.
+                </p>
+                <div className="form-actions">
+                  <button type="button" className="primary" disabled={saving} onClick={handleApplyTempDraft}>
+                    임시정책으로 적용
+                  </button>
+                </div>
+              </>
+            )}
           </div>
           <div className="policy-group-detail-rooms">
             <h5>적용 내무반 ({group.rooms.length})</h5>

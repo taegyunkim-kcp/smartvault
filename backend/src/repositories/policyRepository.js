@@ -57,7 +57,10 @@ async function rename(id, name) {
   return findById(id);
 }
 
+// 정책을 지우면 거기 속해 있던 조직/방은 전부 상속(기본 정책)으로 자동 복귀한다 —
+// 그래서 멤버가 남아있어도 그냥 지울 수 있고, door_policy_scopes를 먼저 지워야 FK가 안 걸린다.
 async function remove(id) {
+  await pool.execute('DELETE FROM door_policy_scopes WHERE policy_id = :id', { id });
   const [result] = await pool.execute('DELETE FROM door_policies WHERE id = :id', { id });
   return result.affectedRows > 0;
 }

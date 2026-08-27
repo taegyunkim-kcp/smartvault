@@ -108,6 +108,12 @@ async function clearPreviousDemoData(conn) {
     await conn.query(`DELETE FROM door_policy_scopes WHERE policy_id IN (?)`, [demoPolicyIds]);
     await conn.query(`DELETE FROM door_policies WHERE id IN (?)`, [demoPolicyIds]);
   }
+  // 관리자가 화면에서 이 방을 드래그로 다른 정책(예: 기본 정책)에 명시적으로 옮겨놨을 수도
+  // 있으므로, scope_code 자체 기준으로도 한 번 더 지운다 — 그래야 재생성 시 UNIQUE(scope_type,
+  // scope_code) 충돌 없이 이 방을 다시 데모 정책에 연결할 수 있다.
+  await conn.query(`DELETE FROM door_policy_scopes WHERE scope_type = 'room' AND scope_code IN (?)`, [
+    LOCKED_SCHEDULE_ROOMS,
+  ]);
   await conn.query(`DELETE FROM door_temp_policies WHERE scope_type = 'room' AND scope_code IN (?)`, [
     LOCKED_SCHEDULE_ROOMS,
   ]);

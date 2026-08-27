@@ -62,6 +62,15 @@ router.get('/', async (req, res) => {
   }
 });
 
+// GET /api/door-policies/temp-groups — 지금 활성인 임시정책들을 같은 카드 모양으로.
+router.get('/temp-groups', async (req, res) => {
+  try {
+    res.json(await doorPolicyService.getActiveTempPolicyGroups());
+  } catch (err) {
+    handleError(res, err);
+  }
+});
+
 router.post('/', async (req, res) => {
   try {
     const policy = await doorPolicyService.createPolicy({

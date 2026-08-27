@@ -107,6 +107,22 @@
   min-width: 0;
 }
 
+.policy-group-temp-banner {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 12px;
+  margin-bottom: 10px;
+  border: 1px solid #d97706;
+  background: rgba(217, 119, 6, 0.1);
+  border-radius: 4px;
+  font-size: 12px;
+}
+
+.policy-group-temp-banner button {
+  margin-left: auto;
+}
+
 .policy-group-detail-rooms {
   width: 220px;
   flex-shrink: 0;

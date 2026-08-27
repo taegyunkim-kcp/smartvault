@@ -130,6 +130,16 @@ async function getEffectivePolicy(roomCode) {
   return { effective_schedule: effectiveSchedule, active_override: activeOverride };
 }
 
+// 이 정책 소속(직접 지정 + 기본 정책이면 global) 스코프 중 하나라도 지금 활성 임시정책이
+// 있으면 그걸 돌려준다 — 정책 카드 안에 "이번 주만 다른 내용 적용 중"을 표시하기 위한 것.
+async function findActiveTempForScopes(scopes) {
+  for (const scope of scopes) {
+    const temp = await tempPolicyRepository.find(scope.scope_type, scope.scope_code);
+    if (temp) return temp;
+  }
+  return null;
+}
+
 // 보관함 개폐 관리/제어 화면 상단의 "현재 정책 적용 현황"용 — 정책마다 실제로 속한(직접
 // 지정된) 조직/방 목록과, 상속까지 반영해서 그 정책을 따르는 전체 내무반 목록을 함께 준다.
 async function getPolicyGroups() {
@@ -139,14 +149,20 @@ async function getPolicyGroups() {
   const groups = new Map();
   for (const policy of policies) {
     const directScopes = await policyRepository.findScopesByPolicy(policy.id);
-    const nextChangeAt = getNextChangeAt({ week_slots: policy.week_slots });
+    const scopesForTemp = policy.is_default
+      ? [...directScopes, { scope_type: 'global', scope_code: 'ALL' }]
+      : directScopes;
+    const activeTemp = await findActiveTempForScopes(scopesForTemp);
+    const effectiveWeekSlots = activeTemp ? activeTemp.week_slots : policy.week_slots;
+    const nextChangeAt = getNextChangeAt({ week_slots: effectiveWeekSlots });
     groups.set(policy.id, {
       id: policy.id,
       name: policy.name,
       is_default: Boolean(policy.is_default),
       week_slots: policy.week_slots,
       direct_scopes: directScopes,
-      currently_locked: isLocked({ effective_schedule: { week_slots: policy.week_slots }, active_override: null }),
+      active_temp: activeTemp ? { week_slots: activeTemp.week_slots, valid_until: activeTemp.valid_until } : null,
+      currently_locked: isLocked({ effective_schedule: { week_slots: effectiveWeekSlots }, active_override: null }),
       next_change_at: nextChangeAt ? nextChangeAt.toISOString() : null,
       rooms: [],
     });
@@ -166,6 +182,69 @@ async function getPolicyGroups() {
     if (b.is_default) return 1;
     return a.name.localeCompare(b.name, 'ko');
   });
+}
+
+const SCOPE_TYPE_LABELS = { base: '중대', building: '소대', room: '내무반', global: '전체' };
+
+// 어떤 조직/방이 지금 임시정책의 영향을 받는지 — resolvePolicyForRoom과 같은 모양으로
+// room→building→base→global 순서로 활성 임시정책을 찾는다(레벨 우선순위는 영구정책과 동일).
+async function resolveTempPolicyForRoom(hierarchy) {
+  const candidates = [
+    ['room', hierarchy.room_code],
+    ['building', hierarchy.building_code],
+    ['base', hierarchy.base_code],
+    ['global', 'ALL'],
+  ];
+  for (const [scopeType, scopeCode] of candidates) {
+    const temp = await tempPolicyRepository.find(scopeType, scopeCode);
+    if (temp) return temp;
+  }
+  return null;
+}
+
+// 별도 "임시 정책 적용" UI로 만든 예외 중, 어떤 정책의 소속 스코프와도 겹치지 않는 것만
+// "정책 적용 현황"에 별도 카드로 보여준다 — 정책 소속 스코프와 겹치는 임시정책은 그 정책
+// 카드 안에 인라인으로(getPolicyGroups의 active_temp) 이미 표시되므로 여기서 제외한다.
+async function getActiveTempPolicyGroups() {
+  const policies = await policyRepository.findAll();
+  const ownedScopeKeys = new Set();
+  for (const policy of policies) {
+    const scopes = await policyRepository.findScopesByPolicy(policy.id);
+    for (const scope of scopes) ownedScopeKeys.add(`${scope.scope_type}:${scope.scope_code}`);
+    if (policy.is_default) ownedScopeKeys.add('global:ALL');
+  }
+
+  const rooms = await roomRepository.findAll();
+  const groups = new Map();
+
+  for (const room of rooms) {
+    const hierarchy = await doorPolicyRepository.findRoomHierarchy(room.room_code);
+    if (!hierarchy) continue;
+    const temp = await resolveTempPolicyForRoom(hierarchy);
+    if (!temp) continue;
+    if (ownedScopeKeys.has(`${temp.scope_type}:${temp.scope_code}`)) continue;
+
+    if (!groups.has(temp.id)) {
+      const nextChangeAt = getNextChangeAt({ week_slots: temp.week_slots });
+      groups.set(temp.id, {
+        id: `temp-${temp.id}`,
+        is_temp: true,
+        is_default: false,
+        name: `임시정책 — ${SCOPE_TYPE_LABELS[temp.scope_type] || temp.scope_type} ${temp.scope_code}`,
+        scope_type: temp.scope_type,
+        scope_code: temp.scope_code,
+        week_slots: temp.week_slots,
+        valid_until: temp.valid_until,
+        direct_scopes: [],
+        currently_locked: isLocked({ effective_schedule: { week_slots: temp.week_slots }, active_override: null }),
+        next_change_at: nextChangeAt ? nextChangeAt.toISOString() : null,
+        rooms: [],
+      });
+    }
+    groups.get(temp.id).rooms.push({ room_code: room.room_code, room_name: room.room_name });
+  }
+
+  return [...groups.values()];
 }
 
 async function createPolicy({ name, weekSlots }) {
@@ -193,6 +272,8 @@ async function renamePolicy(policyId, name) {
   return policyRepository.rename(policyId, name);
 }
 
+// 정책을 지우면 거기 속해 있던 조직/방은 전부 즉시 상속(기본 정책)으로 복귀한다 —
+// 그래서 멤버가 남아있어도 삭제를 막지 않는다. 기본 정책만 예외.
 async function deletePolicy(policyId) {
   const policy = await policyRepository.findById(policyId);
   if (!policy) {
@@ -200,10 +281,6 @@ async function deletePolicy(policyId) {
   }
   if (policy.is_default) {
     throw new ServiceError('기본 정책은 삭제할 수 없습니다.', 400);
-  }
-  const memberCount = await policyRepository.countScopes(policyId);
-  if (memberCount > 0) {
-    throw new ServiceError('이 정책에 속한 조직/내무반이 있어 삭제할 수 없습니다.', 409);
   }
   await policyRepository.remove(policyId);
 }
@@ -241,6 +318,10 @@ async function saveTempPolicy(scopeType, scopeCode, weekSlots) {
   assertWeekSlots(weekSlots);
 
   const now = new Date();
+  // mysql2가 DATETIME(초 단위, 밀리초 없음) 컬럼에 바인딩할 때 밀리초를 반올림하므로,
+  // ms>=500이면 valid_from이 다음 초로 올림되어 저장 직후 조회(NOW())에서 "아직 유효하지
+  // 않음"으로 보이는 경합이 생긴다. 밀리초를 미리 0으로 잘라내 항상 내림되게 한다.
+  now.setMilliseconds(0);
   const validUntil = computeNextWeekBoundaryUTC(now);
   return tempPolicyRepository.upsert(scopeType, scopeCode, { weekSlots, validFrom: now, validUntil });
 }
@@ -254,6 +335,7 @@ module.exports = {
   ServiceError,
   getEffectivePolicy,
   getPolicyGroups,
+  getActiveTempPolicyGroups,
   createPolicy,
   updatePolicyContent,
   renamePolicy,
