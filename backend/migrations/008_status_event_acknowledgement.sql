@@ -1,5 +1,5 @@
 -- 이상 이벤트(personnel_status_events) 확인 처리 컬럼 추가
--- 실행: mysql -h 127.0.0.1 -P 3307 -u smartvault_dev -p smartvault_dev < 006_status_event_acknowledgement.sql
+-- 실행: mysql -h 127.0.0.1 -P 3307 -u smartvault_dev -p smartvault_dev < 008_status_event_acknowledgement.sql
 -- (운영 적용 시 포트/유저를 .env.production 값으로 교체)
 -- 002_personnel_and_door_control.sql이 먼저 적용되어 있어야 함
 --
