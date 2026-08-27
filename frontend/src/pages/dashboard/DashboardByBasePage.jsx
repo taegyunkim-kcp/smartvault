@@ -3,6 +3,8 @@ import { useNavigate, useParams } from 'react-router-dom';
 import { listBases } from '../../api/bases';
 import { getBuildingSummaries, getPersonnelStatus, getRoomSummaries } from '../../api/dashboard';
 import RoomStatusGrid from '../../components/RoomStatusGrid';
+import SortableTh from '../../components/SortableTh';
+import { useSortableList } from '../../hooks/useSortableList';
 import '../../styles/crud.css';
 
 const STAT_CARDS = [
@@ -66,13 +68,14 @@ function DashboardByBasePage() {
     loadScoped();
   }, [baseCode]);
 
-  if (loading) return <p>불러오는 중...</p>;
-
   const baseStatus = baseCode ? personnelStatus?.by_base?.[baseCode] : null;
   const filteredPersonnel =
     selectedStat && personnelStatus
       ? personnelStatus.personnel.filter((p) => p.base_code === baseCode && p.status === selectedStat)
       : null;
+  const personnelSort = useSortableList(filteredPersonnel);
+
+  if (loading) return <p>불러오는 중...</p>;
 
   return (
     <div>
@@ -112,19 +115,19 @@ function DashboardByBasePage() {
             <table className="data-table">
               <thead>
                 <tr>
-                  <th>군번</th>
-                  <th>이름</th>
-                  <th>소속 내무반</th>
-                  <th>감지 위치</th>
+                  <SortableTh label="군번" sortKeyName="service_number" sortKey={personnelSort.sortKey} sortDir={personnelSort.sortDir} onSort={personnelSort.toggleSort} />
+                  <SortableTh label="이름" sortKeyName="name" sortKey={personnelSort.sortKey} sortDir={personnelSort.sortDir} onSort={personnelSort.toggleSort} />
+                  <SortableTh label="소속 내무반" sortKeyName="room_code" sortKey={personnelSort.sortKey} sortDir={personnelSort.sortDir} onSort={personnelSort.toggleSort} />
+                  <SortableTh label="감지 위치" sortKeyName="detected_room_code" sortKey={personnelSort.sortKey} sortDir={personnelSort.sortDir} onSort={personnelSort.toggleSort} />
                 </tr>
               </thead>
               <tbody>
-                {filteredPersonnel.length === 0 && (
+                {personnelSort.sorted.length === 0 && (
                   <tr>
                     <td colSpan={4}>해당 상태의 인원이 없습니다.</td>
                   </tr>
                 )}
-                {filteredPersonnel.map((p) => (
+                {personnelSort.sorted.map((p) => (
                   <tr key={p.service_number} onClick={() => navigate(`/personnel/${p.service_number}/edit`)}>
                     <td>{p.service_number}</td>
                     <td>{p.name}</td>

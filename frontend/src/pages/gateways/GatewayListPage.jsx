@@ -144,7 +144,11 @@ function GatewayListPage() {
           ))}
         </select>
         <div className="spacer" />
-        <button type="button" className="primary" onClick={() => navigate('/gateways/new')}>
+        <button
+          type="button"
+          className="primary"
+          onClick={() => navigate(roomCode ? `/gateways/new?room_code=${roomCode}` : '/gateways/new')}
+        >
           + 새 게이트웨이
         </button>
       </div>

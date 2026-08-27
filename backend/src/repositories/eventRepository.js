@@ -1,6 +1,6 @@
 const pool = require('../config/db');
 
-async function findRfidEvents({ roomCode, gatewayId, from, to, limit, offset }) {
+async function findRfidEvents({ roomCode, gatewayId, rfidUid, from, to, limit, offset }) {
   const conditions = [];
   const params = {};
 
@@ -11,6 +11,10 @@ async function findRfidEvents({ roomCode, gatewayId, from, to, limit, offset }) 
   if (gatewayId) {
     conditions.push('re.gateway_id = :gatewayId');
     params.gatewayId = gatewayId;
+  }
+  if (rfidUid) {
+    conditions.push('re.rfid_uid = :rfidUid');
+    params.rfidUid = rfidUid;
   }
   if (from) {
     conditions.push('re.occurred_at >= :from');
@@ -68,7 +72,7 @@ async function findDoorEvents({ roomCode, gatewayId, from, to, limit, offset }) 
   return rows;
 }
 
-async function findStatusEvents({ statusType, roomCode, from, to, limit, offset }) {
+async function findStatusEvents({ statusType, roomCode, acknowledged, from, to, limit, offset }) {
   const conditions = [];
   const params = {};
 
@@ -79,6 +83,11 @@ async function findStatusEvents({ statusType, roomCode, from, to, limit, offset 
   if (roomCode) {
     conditions.push('room_code = :roomCode');
     params.roomCode = roomCode;
+  }
+  if (acknowledged === true) {
+    conditions.push('acknowledged_at IS NOT NULL');
+  } else if (acknowledged === false) {
+    conditions.push('acknowledged_at IS NULL');
   }
   if (from) {
     conditions.push('occurred_at >= :from');

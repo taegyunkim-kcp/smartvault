@@ -2,6 +2,9 @@ import { useEffect, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { getBaseSummaries, getPersonnelStatus, getRoomSummaries } from '../../api/dashboard';
 import RoomStatusGrid from '../../components/RoomStatusGrid';
+import SortableTh from '../../components/SortableTh';
+import StatusEventDetailModal from '../../components/StatusEventDetailModal';
+import { useSortableList } from '../../hooks/useSortableList';
 import { formatDateTime } from '../../utils/formatDateTime';
 import '../../styles/crud.css';
 
@@ -27,6 +30,7 @@ function DashboardBasesPage() {
   const [allRooms, setAllRooms] = useState([]);
   const [personnelStatus, setPersonnelStatus] = useState(null);
   const [selectedStat, setSelectedStat] = useState(null);
+  const [selectedEventId, setSelectedEventId] = useState(null);
   const [error, setError] = useState(null);
   const [loading, setLoading] = useState(true);
 
@@ -53,13 +57,25 @@ function DashboardBasesPage() {
     load();
   }, []);
 
-  if (loading) return <p>불러오는 중...</p>;
-
   const filteredPersonnel =
     selectedStat && selectedStat !== 'total_registered' && selectedStat !== 'unregistered' && personnelStatus
       ? personnelStatus.personnel.filter((p) => p.status === selectedStat)
       : null;
   const showUnregisteredList = selectedStat === 'unregistered';
+
+  const personnelSort = useSortableList(filteredPersonnel);
+  const unregisteredSort = useSortableList(showUnregisteredList ? personnelStatus?.unregistered_tags : null);
+
+  function handleEventModalClose(acknowledged) {
+    if (acknowledged && selectedEventId != null) {
+      setPersonnelStatus((prev) =>
+        prev ? { ...prev, recent_events: prev.recent_events.filter((e) => e.id !== selectedEventId) } : prev
+      );
+    }
+    setSelectedEventId(null);
+  }
+
+  if (loading) return <p>불러오는 중...</p>;
 
   return (
     <div>
@@ -86,19 +102,19 @@ function DashboardBasesPage() {
             <table className="data-table">
               <thead>
                 <tr>
-                  <th>군번</th>
-                  <th>이름</th>
-                  <th>소속 내무반</th>
-                  <th>감지 위치</th>
+                  <SortableTh label="군번" sortKeyName="service_number" sortKey={personnelSort.sortKey} sortDir={personnelSort.sortDir} onSort={personnelSort.toggleSort} />
+                  <SortableTh label="이름" sortKeyName="name" sortKey={personnelSort.sortKey} sortDir={personnelSort.sortDir} onSort={personnelSort.toggleSort} />
+                  <SortableTh label="소속 내무반" sortKeyName="room_code" sortKey={personnelSort.sortKey} sortDir={personnelSort.sortDir} onSort={personnelSort.toggleSort} />
+                  <SortableTh label="감지 위치" sortKeyName="detected_room_code" sortKey={personnelSort.sortKey} sortDir={personnelSort.sortDir} onSort={personnelSort.toggleSort} />
                 </tr>
               </thead>
               <tbody>
-                {filteredPersonnel.length === 0 && (
+                {personnelSort.sorted.length === 0 && (
                   <tr>
                     <td colSpan={4}>해당 상태의 인원이 없습니다.</td>
                   </tr>
                 )}
-                {filteredPersonnel.map((p) => (
+                {personnelSort.sorted.map((p) => (
                   <tr key={p.service_number} onClick={() => navigate(`/personnel/${p.service_number}/edit`)}>
                     <td>{p.service_number}</td>
                     <td>{p.name}</td>
@@ -114,19 +130,19 @@ function DashboardBasesPage() {
             <table className="data-table">
               <thead>
                 <tr>
-                  <th>rfid_uid</th>
-                  <th>감지 내무반</th>
-                  <th>게이트웨이</th>
-                  <th>최근 감지 시각</th>
+                  <SortableTh label="rfid_uid" sortKeyName="rfid_uid" sortKey={unregisteredSort.sortKey} sortDir={unregisteredSort.sortDir} onSort={unregisteredSort.toggleSort} />
+                  <SortableTh label="감지 내무반" sortKeyName="room_code" sortKey={unregisteredSort.sortKey} sortDir={unregisteredSort.sortDir} onSort={unregisteredSort.toggleSort} />
+                  <SortableTh label="게이트웨이" sortKeyName="gateway_id" sortKey={unregisteredSort.sortKey} sortDir={unregisteredSort.sortDir} onSort={unregisteredSort.toggleSort} />
+                  <SortableTh label="최근 감지 시각" sortKeyName="last_seen_at" sortKey={unregisteredSort.sortKey} sortDir={unregisteredSort.sortDir} onSort={unregisteredSort.toggleSort} />
                 </tr>
               </thead>
               <tbody>
-                {personnelStatus.unregistered_tags.length === 0 && (
+                {unregisteredSort.sorted.length === 0 && (
                   <tr>
                     <td colSpan={4}>미등록 태그가 없습니다.</td>
                   </tr>
                 )}
-                {personnelStatus.unregistered_tags.map((tag) => (
+                {unregisteredSort.sorted.map((tag) => (
                   <tr key={tag.rfid_uid}>
                     <td>{tag.rfid_uid}</td>
                     <td>{tag.room_code}</td>
@@ -210,7 +226,7 @@ function DashboardBasesPage() {
                 </tr>
               )}
               {personnelStatus.recent_events.map((event) => (
-                <tr key={event.id}>
+                <tr key={event.id} onClick={() => setSelectedEventId(event.id)}>
                   <td>{STATUS_LABELS[event.status_type] || event.status_type}</td>
                   <td>{event.service_number || event.rfid_uid}</td>
                   <td>{event.room_code || '-'}</td>
@@ -220,6 +236,10 @@ function DashboardBasesPage() {
             </tbody>
           </table>
         </>
+      )}
+
+      {selectedEventId != null && (
+        <StatusEventDetailModal eventId={selectedEventId} onClose={handleEventModalClose} />
       )}
     </div>
   );

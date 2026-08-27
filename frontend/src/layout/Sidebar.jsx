@@ -11,8 +11,11 @@ const NAV_GROUPS = [
     ],
   },
   {
-    title: '이벤트 처리',
-    items: [{ label: '이벤트 로그', to: '/events' }],
+    title: '이벤트 관리',
+    items: [
+      { label: '이벤트 처리', to: '/events/handling' },
+      { label: '이벤트 로그', to: '/events' },
+    ],
   },
   { label: '보관함 개폐 관리/제어', to: '/schedules' },
   {

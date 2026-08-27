@@ -44,6 +44,13 @@ function assertStatusType(statusType) {
   }
 }
 
+function parseAcknowledged(raw) {
+  if (raw === undefined || raw === '') return undefined;
+  if (raw === 'true') return true;
+  if (raw === 'false') return false;
+  throw new ServiceError('acknowledged는 true 또는 false여야 합니다.', 400);
+}
+
 async function listRfidEvents({ roomCode, gatewayId, from, to, limit, offset }) {
   const parsedLimit = parseLimit(limit);
   const rows = await eventRepository.findRfidEvents({
@@ -72,12 +79,13 @@ async function listDoorEvents({ roomCode, gatewayId, from, to, limit, offset }) 
   return { items: hasMore ? rows.slice(0, parsedLimit) : rows, has_more: hasMore };
 }
 
-async function listStatusEvents({ statusType, roomCode, from, to, limit, offset }) {
+async function listStatusEvents({ statusType, roomCode, acknowledged, from, to, limit, offset }) {
   assertStatusType(statusType);
   const parsedLimit = parseLimit(limit);
   const rows = await eventRepository.findStatusEvents({
     statusType,
     roomCode,
+    acknowledged: parseAcknowledged(acknowledged),
     from: parseDate(from, 'from'),
     to: parseDate(to, 'to'),
     limit: parsedLimit + 1,

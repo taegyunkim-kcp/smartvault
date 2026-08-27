@@ -51,6 +51,7 @@ router.get('/status', async (req, res) => {
       await eventService.listStatusEvents({
         statusType: req.query.status_type,
         roomCode: req.query.room_code,
+        acknowledged: req.query.acknowledged,
         from: req.query.from,
         to: req.query.to,
         limit: req.query.limit,

@@ -18,4 +18,21 @@ function getPersonnelStatus() {
   return request('/api/dashboard/personnel-status');
 }
 
-export { getBaseSummaries, getBuildingSummaries, getRoomSummaries, getPersonnelStatus };
+function getStatusEventDetail(id) {
+  return request(`/api/dashboard/personnel-status/events/${encodeURIComponent(id)}`);
+}
+
+function acknowledgeStatusEvent(id) {
+  return request(`/api/dashboard/personnel-status/events/${encodeURIComponent(id)}/acknowledge`, {
+    method: 'POST',
+  });
+}
+
+export {
+  getBaseSummaries,
+  getBuildingSummaries,
+  getRoomSummaries,
+  getPersonnelStatus,
+  getStatusEventDetail,
+  acknowledgeStatusEvent,
+};

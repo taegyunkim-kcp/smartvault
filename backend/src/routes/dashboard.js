@@ -5,6 +5,9 @@ const personnelStatusService = require('../services/personnelStatusService');
 const router = express.Router();
 
 function handleError(res, err) {
+  if (err instanceof personnelStatusService.ServiceError) {
+    return res.status(err.status).json({ error: err.message });
+  }
   console.error(err);
   return res.status(500).json({ error: '서버 오류가 발생했습니다.' });
 }
@@ -36,6 +39,22 @@ router.get('/rooms', async (req, res) => {
 router.get('/personnel-status', async (req, res) => {
   try {
     res.json(await personnelStatusService.getStatusOverview());
+  } catch (err) {
+    handleError(res, err);
+  }
+});
+
+router.get('/personnel-status/events/:id', async (req, res) => {
+  try {
+    res.json(await personnelStatusService.getStatusEventDetail(req.params.id));
+  } catch (err) {
+    handleError(res, err);
+  }
+});
+
+router.post('/personnel-status/events/:id/acknowledge', async (req, res) => {
+  try {
+    res.json(await personnelStatusService.acknowledgeStatusEvent(req.params.id));
   } catch (err) {
     handleError(res, err);
   }

@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { listDoorEvents, listRfidEvents, listStatusEvents } from '../../api/events';
 import { listRooms } from '../../api/rooms';
+import StatusEventDetailModal from '../../components/StatusEventDetailModal';
 import { formatDateTime } from '../../utils/formatDateTime';
 import '../../styles/crud.css';
 
@@ -26,6 +27,7 @@ function EventLogPage() {
   const [rooms, setRooms] = useState([]);
   const [roomCode, setRoomCode] = useState('');
   const [statusType, setStatusType] = useState('');
+  const [acknowledged, setAcknowledged] = useState('');
   const [from, setFrom] = useState('');
   const [to, setTo] = useState('');
   const [items, setItems] = useState([]);
@@ -33,6 +35,7 @@ function EventLogPage() {
   const [offset, setOffset] = useState(0);
   const [error, setError] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [selectedEventId, setSelectedEventId] = useState(null);
 
   useEffect(() => {
     listRooms()
@@ -48,7 +51,10 @@ function EventLogPage() {
       limit: PAGE_SIZE,
       offset: currentOffset,
     };
-    if (tab === 'status') filters.status_type = statusType;
+    if (tab === 'status') {
+      filters.status_type = statusType;
+      filters.acknowledged = acknowledged;
+    }
     return filters;
   }
 
@@ -76,7 +82,14 @@ function EventLogPage() {
 
     load();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [tab, roomCode, statusType, from, to]);
+  }, [tab, roomCode, statusType, acknowledged, from, to]);
+
+  function handleEventModalClose(didAcknowledge, updatedEvent) {
+    if (didAcknowledge && updatedEvent) {
+      setItems((prev) => prev.map((it) => (it.id === updatedEvent.id ? updatedEvent : it)));
+    }
+    setSelectedEventId(null);
+  }
 
   async function handleLoadMore() {
     setLoading(true);
@@ -121,14 +134,21 @@ function EventLogPage() {
           ))}
         </select>
         {tab === 'status' && (
-          <select value={statusType} onChange={(e) => setStatusType(e.target.value)}>
-            <option value="">전체 유형</option>
-            {Object.entries(STATUS_TYPE_LABELS).map(([value, label]) => (
-              <option key={value} value={value}>
-                {label}
-              </option>
-            ))}
-          </select>
+          <>
+            <select value={statusType} onChange={(e) => setStatusType(e.target.value)}>
+              <option value="">전체 유형</option>
+              {Object.entries(STATUS_TYPE_LABELS).map(([value, label]) => (
+                <option key={value} value={value}>
+                  {label}
+                </option>
+              ))}
+            </select>
+            <select value={acknowledged} onChange={(e) => setAcknowledged(e.target.value)}>
+              <option value="">확인 여부 전체</option>
+              <option value="false">미확인</option>
+              <option value="true">확인됨</option>
+            </select>
+          </>
         )}
         <input type="datetime-local" value={from} onChange={(e) => setFrom(e.target.value)} />
         <span>~</span>
@@ -205,20 +225,28 @@ function EventLogPage() {
               <th>유형</th>
               <th>대상</th>
               <th>내무반</th>
+              <th>확인/조치 여부</th>
             </tr>
           </thead>
           <tbody>
             {items.length === 0 && (
               <tr>
-                <td colSpan={4}>조회된 이벤트가 없습니다.</td>
+                <td colSpan={5}>조회된 이벤트가 없습니다.</td>
               </tr>
             )}
             {items.map((item) => (
-              <tr key={item.id}>
+              <tr key={item.id} onClick={() => setSelectedEventId(item.id)}>
                 <td>{formatDateTime(item.occurred_at)}</td>
                 <td>{STATUS_TYPE_LABELS[item.status_type] || item.status_type}</td>
                 <td>{item.service_number || item.rfid_uid}</td>
                 <td>{item.room_code || '-'}</td>
+                <td>
+                  {item.acknowledged_at ? (
+                    <span className="badge badge-online">확인됨 {formatDateTime(item.acknowledged_at)}</span>
+                  ) : (
+                    <span className="badge badge-offline">미확인</span>
+                  )}
+                </td>
               </tr>
             ))}
           </tbody>
@@ -230,6 +258,10 @@ function EventLogPage() {
           더 보기
         </button>
       </div>
+
+      {selectedEventId != null && (
+        <StatusEventDetailModal eventId={selectedEventId} onClose={handleEventModalClose} />
+      )}
     </div>
   );
 }

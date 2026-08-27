@@ -67,9 +67,26 @@ async function insertStatusEvent({ statusType, serviceNumber, rfidUid, roomCode,
 async function findRecentStatusEvents(limit) {
   const safeLimit = Number.isInteger(limit) && limit > 0 ? limit : 20;
   const [rows] = await pool.execute(
-    `SELECT * FROM personnel_status_events ORDER BY occurred_at DESC LIMIT ${safeLimit}`
+    `SELECT * FROM personnel_status_events
+     WHERE acknowledged_at IS NULL
+     ORDER BY occurred_at DESC LIMIT ${safeLimit}`
   );
   return rows;
+}
+
+async function findStatusEventById(id) {
+  const [rows] = await pool.execute(`SELECT * FROM personnel_status_events WHERE id = :id`, { id });
+  return rows[0] || null;
+}
+
+async function acknowledgeStatusEvent(id, adminId) {
+  await pool.execute(
+    `UPDATE personnel_status_events
+     SET acknowledged_at = NOW(), acknowledged_by = :adminId
+     WHERE id = :id`,
+    { id, adminId: adminId || null }
+  );
+  return findStatusEventById(id);
 }
 
 module.exports = {
@@ -78,4 +95,6 @@ module.exports = {
   findLatestStatusEventForUid,
   insertStatusEvent,
   findRecentStatusEvents,
+  findStatusEventById,
+  acknowledgeStatusEvent,
 };

@@ -135,6 +135,7 @@ docker exec -i smartvault-dev-db mysql -u smartvault_dev -pktg0506@! smartvault_
 docker exec -i smartvault-dev-db mysql -u smartvault_dev -pktg0506@! smartvault_dev < backend\migrations\003_gateway_reported_lock_state.sql
 docker exec -i smartvault-dev-db mysql -u smartvault_dev -pktg0506@! smartvault_dev < backend\migrations\004_org_groups.sql
 docker exec -i smartvault-dev-db mysql -u smartvault_dev -pktg0506@! smartvault_dev < backend\migrations\005_detected_gateways.sql
+docker exec -i smartvault-dev-db mysql -u smartvault_dev -pktg0506@! smartvault_dev < backend\migrations\006_status_event_acknowledgement.sql
 # 이후 새 마이그레이션이 추가되면 같은 방식으로 번호 순서대로 적용하면 됩니다 (자동 마이그레이션 도구는 아직 없음).
 
 # 3) 백엔드 (포트 4000, 코드 수정 시 자동 재시작)
@@ -179,6 +180,7 @@ docker exec -i smartvault-prod-db mysql -u <운영유저> -p<운영비번> smart
 docker exec -i smartvault-prod-db mysql -u <운영유저> -p<운영비번> smartvault_prod < backend\migrations\003_gateway_reported_lock_state.sql
 docker exec -i smartvault-prod-db mysql -u <운영유저> -p<운영비번> smartvault_prod < backend\migrations\004_org_groups.sql
 docker exec -i smartvault-prod-db mysql -u <운영유저> -p<운영비번> smartvault_prod < backend\migrations\005_detected_gateways.sql
+docker exec -i smartvault-prod-db mysql -u <운영유저> -p<운영비번> smartvault_prod < backend\migrations\006_status_event_acknowledgement.sql
 ```
 
 운영 백엔드는 터미널을 계속 열어두지 않도록 **PM2**로 상시 구동합니다:
