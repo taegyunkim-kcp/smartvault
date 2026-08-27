@@ -60,11 +60,16 @@ function SchedulePage() {
       .catch((err) => setError(err.message));
   }
 
+  // 내무반 타일의 좌측 하단 각(scheduled_lock_state)은 allRooms에서 오는데, 정책 소속이
+  // 바뀌는 동작(드래그 이동, 멤버 추가/제거, 임시정책 적용/취소, 정책 삭제·편집)이 일어나도
+  // allRooms를 같이 갱신하지 않으면 카드는 새 정책으로 옮겨졌는데 타일은 예전 정책 기준
+  // 상태를 계속 보여줘서, 같은 정책 안의 내무반끼리 서로 다른 각으로 보이는 문제가 있었다.
   function reloadPolicies() {
-    return Promise.all([listPolicies(), listActiveTempPolicyGroups()])
-      .then(([groups, tempGroups]) => {
+    return Promise.all([listPolicies(), listActiveTempPolicyGroups(), getRoomSummaries()])
+      .then(([groups, tempGroups, roomSummaries]) => {
         setPolicyGroups(groups);
         setTempPolicyGroups(tempGroups);
+        setAllRooms(roomSummaries);
       })
       .catch((err) => setError(err.message));
   }

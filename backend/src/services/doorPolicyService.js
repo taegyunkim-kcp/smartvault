@@ -87,9 +87,26 @@ async function resolvePolicyForRoom(hierarchy) {
   return policyRepository.findDefault();
 }
 
+// 어떤 정책이 지금 실제로 적용하는 내용 — 그 정책 소속(직접 지정 + 기본 정책이면 global)
+// 스코프 중 하나라도 임시정책이 활성이면 그 내용을, 아니면 정책 자체 내용을 쓴다.
+// "정책 적용 현황" 카드의 active_temp/currently_locked도 이 규칙을 그대로 쓴다 — 방이
+// 어떤 스코프(직접 room 지정이든 building/base 상속이든)를 통해 이 정책에 속했든, 그
+// 정책에 임시정책이 걸려 있으면 방 타일도 동일하게 반영되어야 카드와 타일 상태가 어긋나지
+// 않는다(예: 카드에서 base 스코프에 임시정책을 걸어도, room 스코프로 직접 이 정책에 속한
+// 방은 옛날엔 room 레벨에서 바로 멈춰버려 임시정책을 못 보고 정책 원본 내용을 보여줬음).
+async function getPolicyEffectiveWeekSlots(policy) {
+  const directScopes = await policyRepository.findScopesByPolicy(policy.id);
+  const scopesForTemp = policy.is_default
+    ? [...directScopes, { scope_type: 'global', scope_code: 'ALL' }]
+    : directScopes;
+  const activeTemp = await findActiveTempForScopes(scopesForTemp);
+  return activeTemp ? activeTemp.week_slots : policy.week_slots;
+}
+
 // 지금 실제로 적용받는 내용 — 레벨(room→building→base→global)별로 "이번 주 임시정책이
-// 있으면 그걸, 없으면 그 레벨의 영구 정책"을 먼저 확인하고, 없으면 상위 레벨로 올라간다.
-// (즉 room 레벨 영구 정책이 building 레벨 임시정책보다 항상 우선 — 기존 상속 우선순위와 일관)
+// 있으면 그걸, 없으면 그 레벨의 영구 정책(및 그 정책 자체의 임시정책)"을 먼저 확인하고,
+// 없으면 상위 레벨로 올라간다. (즉 room 레벨 영구 정책이 building 레벨의, 이 정책과 무관한
+// 임시정책보다 항상 우선 — 기존 상속 우선순위와 일관)
 async function resolveEffectiveAtLevel(scopeType, scopeCode) {
   const temp = await tempPolicyRepository.find(scopeType, scopeCode);
   if (temp) {
@@ -97,7 +114,8 @@ async function resolveEffectiveAtLevel(scopeType, scopeCode) {
   }
   const policy = await resolvePolicyForScope(scopeType, scopeCode);
   if (policy) {
-    return { week_slots: policy.week_slots, source: 'policy', policy_id: policy.id, policy_name: policy.name };
+    const weekSlots = await getPolicyEffectiveWeekSlots(policy);
+    return { week_slots: weekSlots, source: 'policy', policy_id: policy.id, policy_name: policy.name };
   }
   return null;
 }
