@@ -35,7 +35,8 @@ router.put('/temp/:scopeType/:scopeCode', async (req, res) => {
     const tempPolicy = await doorPolicyService.saveTempPolicy(
       req.params.scopeType,
       req.params.scopeCode,
-      req.body.week_slots
+      req.body.week_slots,
+      req.body.reason
     );
     res.json(tempPolicy);
   } catch (err) {
@@ -45,7 +46,7 @@ router.put('/temp/:scopeType/:scopeCode', async (req, res) => {
 
 router.delete('/temp/:scopeType/:scopeCode', async (req, res) => {
   try {
-    await doorPolicyService.cancelTempPolicy(req.params.scopeType, req.params.scopeCode);
+    await doorPolicyService.cancelTempPolicy(req.params.scopeType, req.params.scopeCode, req.body.reason);
     res.status(204).send();
   } catch (err) {
     handleError(res, err);
@@ -109,7 +110,12 @@ router.delete('/:id', async (req, res) => {
 
 router.post('/:id/members', async (req, res) => {
   try {
-    await doorPolicyService.addMember(Number(req.params.id), req.body.scope_type, req.body.scope_code);
+    await doorPolicyService.addMember(
+      Number(req.params.id),
+      req.body.scope_type,
+      req.body.scope_code,
+      req.body.reason
+    );
     res.status(201).json(await doorPolicyService.getPolicyGroups());
   } catch (err) {
     handleError(res, err);
@@ -118,7 +124,7 @@ router.post('/:id/members', async (req, res) => {
 
 router.delete('/members/:scopeType/:scopeCode', async (req, res) => {
   try {
-    await doorPolicyService.removeMember(req.params.scopeType, req.params.scopeCode);
+    await doorPolicyService.removeMember(req.params.scopeType, req.params.scopeCode, req.body.reason);
     res.status(204).send();
   } catch (err) {
     handleError(res, err);

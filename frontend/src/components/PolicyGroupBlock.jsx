@@ -1,6 +1,8 @@
 import { useEffect, useState } from 'react';
 import WeekSlotGrid from './WeekSlotGrid';
 import RoomStatusGrid from './RoomStatusGrid';
+import OverrideRequestModal from './OverrideRequestModal';
+import ReasonPromptModal from './ReasonPromptModal';
 import { createOverride, cancelOverride } from '../api/doorOverrides';
 import {
   addMember,
@@ -60,6 +62,8 @@ function PolicyGroupBlock({
   const [newMemberScopeType, setNewMemberScopeType] = useState('room');
   const [newMemberScopeCode, setNewMemberScopeCode] = useState('');
   const [dragOver, setDragOver] = useState(false);
+  const [overrideRequest, setOverrideRequest] = useState(null);
+  const [pendingAction, setPendingAction] = useState(null);
 
   const isGlobal = group.is_default;
   const title = isGlobal ? '기본 정책 (전체 적용)' : group.name;
@@ -89,20 +93,38 @@ function PolicyGroupBlock({
     return () => clearInterval(id);
   }, [group.next_change_at, hasActiveOverride]);
 
+  // 즉각 전환을 시작할 때만(개방/잠금) 신청자/승인자/사유를 모달로 입력받는다 —
+  // 이미 활성 오버라이드가 있어 취소하는 경우는 바로 처리한다.
   async function handleToggleRoom(roomCode) {
+    setError(null);
+    const existing = overridesByRoomCode[roomCode];
+    if (existing) {
+      await handleCancelOverride(roomCode, existing.id);
+    } else {
+      const doorCommand = group.currently_locked ? 'open' : 'lock';
+      setOverrideRequest({ roomCode, doorCommand });
+    }
+  }
+
+  async function handleCancelOverride(roomCode, overrideId) {
     setPendingRoomCode(roomCode);
     setError(null);
     try {
-      const existing = overridesByRoomCode[roomCode];
-      if (existing) {
-        await cancelOverride(existing.id);
-      } else {
-        const doorCommand = group.currently_locked ? 'open' : 'lock';
-        await createOverride(roomCode, doorCommand);
-      }
+      await cancelOverride(overrideId);
       await onOverrideChanged();
     } catch (err) {
       setError(err.message);
+    } finally {
+      setPendingRoomCode(null);
+    }
+  }
+
+  async function handleConfirmOverrideRequest({ applicant, approver, reason }) {
+    const { roomCode, doorCommand } = overrideRequest;
+    setPendingRoomCode(roomCode);
+    try {
+      await createOverride(roomCode, doorCommand, undefined, { applicant, approver, reason });
+      await onOverrideChanged();
     } finally {
       setPendingRoomCode(null);
     }
@@ -134,32 +156,28 @@ function PolicyGroupBlock({
     }
   }
 
-  async function handleAddMember() {
+  function handleAddMember() {
     if (!newMemberScopeCode) return;
-    setSaving(true);
-    setError(null);
-    try {
-      await addMember(group.id, newMemberScopeType, newMemberScopeCode);
-      setNewMemberScopeCode('');
-      await onPoliciesChanged();
-    } catch (err) {
-      setError(err.message);
-    } finally {
-      setSaving(false);
-    }
+    const scopeCode = newMemberScopeCode;
+    const scopeType = newMemberScopeType;
+    setPendingAction({
+      title: `${SCOPE_TYPE_LABELS[scopeType]} ${scopeCode}를(을) "${title}" 정책에 추가`,
+      run: async (reason) => {
+        await addMember(group.id, scopeType, scopeCode, reason);
+        setNewMemberScopeCode('');
+        await onPoliciesChanged();
+      },
+    });
   }
 
-  async function handleRemoveMember(scopeType, scopeCode) {
-    setSaving(true);
-    setError(null);
-    try {
-      await removeMember(scopeType, scopeCode);
-      await onPoliciesChanged();
-    } catch (err) {
-      setError(err.message);
-    } finally {
-      setSaving(false);
-    }
+  function handleRemoveMember(scopeType, scopeCode) {
+    setPendingAction({
+      title: `${SCOPE_TYPE_LABELS[scopeType]} ${scopeCode}를(을) "${title}" 정책에서 제거`,
+      run: async (reason) => {
+        await removeMember(scopeType, scopeCode, reason);
+        await onPoliciesChanged();
+      },
+    });
   }
 
   async function handleDeletePolicy() {
@@ -186,61 +204,57 @@ function PolicyGroupBlock({
 
   // "시간표 보기"에서 칸을 여러 개 선택해두고 누르는 버튼 — 정책 자체(편집/저장)는 그대로 두고,
   // 지금까지 고른 슬롯 조합을 이 정책의 소속 조직/방 전체에 이번 주만 유효한 임시정책으로 적용한다.
-  async function handleApplyTempDraft() {
+  function handleApplyTempDraft() {
     const scopes = tempTargetScopes();
     if (scopes.length === 0) {
       setError('이 정책에 속한 조직/내무반이 없어 임시정책을 적용할 수 없습니다.');
       return;
     }
-    setSaving(true);
-    setError(null);
-    try {
-      for (const scope of scopes) {
-        await saveTempPolicy(scope.scope_type, scope.scope_code, tempDraft);
-      }
-      await onPoliciesChanged();
-    } catch (err) {
-      setError(err.message);
-    } finally {
-      setSaving(false);
-    }
+    setPendingAction({
+      title: `"${title}" 임시정책 적용 (이번 주만)`,
+      run: async (reason) => {
+        for (const scope of scopes) {
+          await saveTempPolicy(scope.scope_type, scope.scope_code, tempDraft, reason);
+        }
+        await onPoliciesChanged();
+      },
+    });
   }
 
   // 별도 UI로 만들어진 임시정책 카드(group.is_temp)는 자기 scope 하나를 취소하고,
   // 정책 카드 안에 인라인으로 뜬 임시정책(group.active_temp)은 그 정책의 소속 스코프 전체를 취소한다.
-  async function handleCancelActiveTemp() {
+  function handleCancelActiveTemp() {
     const scopes = group.is_temp
       ? [{ scope_type: group.scope_type, scope_code: group.scope_code }]
       : tempTargetScopes();
-    setSaving(true);
-    setError(null);
-    try {
-      for (const scope of scopes) {
-        await cancelTempPolicy(scope.scope_type, scope.scope_code);
-      }
-      await onPoliciesChanged();
-    } catch (err) {
-      setError(err.message);
-      setSaving(false);
-    }
+    setPendingAction({
+      title: `"${title}" 임시정책 취소`,
+      run: async (reason) => {
+        for (const scope of scopes) {
+          await cancelTempPolicy(scope.scope_type, scope.scope_code, reason);
+        }
+        await onPoliciesChanged();
+      },
+    });
   }
 
-  async function handleDrop(e) {
+  function handleDrop(e) {
     e.preventDefault();
     setDragOver(false);
     if (group.is_temp) return;
     const roomCode = e.dataTransfer.getData('text/room-code');
     if (!roomCode) return;
     setError(null);
-    try {
-      // 기본 정책도 door_policies 행 하나일 뿐이라 그냥 addMember로 처리한다 — 상속으로만
-      // 이 카드에 있던 방(자기 소속 scope 행이 없는 방)을 드래그해도 명시적으로 새 행이
-      // 생기면서 확실히 옮겨진다(removeMember는 지울 행이 애초에 없으면 조용히 아무 효과가 없었음).
-      await addMember(group.id, 'room', roomCode);
-      await onPoliciesChanged();
-    } catch (err) {
-      setError(err.message);
-    }
+    setPendingAction({
+      title: `내무반 ${roomCode}를(을) "${title}" 정책으로 이동`,
+      run: async (reason) => {
+        // 기본 정책도 door_policies 행 하나일 뿐이라 그냥 addMember로 처리한다 — 상속으로만
+        // 이 카드에 있던 방(자기 소속 scope 행이 없는 방)을 드래그해도 명시적으로 새 행이
+        // 생기면서 확실히 옮겨진다(removeMember는 지울 행이 애초에 없으면 조용히 아무 효과가 없었음).
+        await addMember(group.id, 'room', roomCode, reason);
+        await onPoliciesChanged();
+      },
+    });
   }
 
   return (
@@ -290,7 +304,7 @@ function PolicyGroupBlock({
 
       <RoomStatusGrid
         rooms={groupRoomSummaries}
-        onSelectRoom={pendingRoomCode || editing ? undefined : handleToggleRoom}
+        onSelectRoom={pendingRoomCode || editing || overrideRequest ? undefined : handleToggleRoom}
         overridesByRoomCode={overridesByRoomCode}
         now={now}
         draggable={!editing && !group.is_temp}
@@ -441,6 +455,23 @@ function PolicyGroupBlock({
             )}
           </div>
         </div>
+      )}
+
+      {overrideRequest && (
+        <OverrideRequestModal
+          roomCode={overrideRequest.roomCode}
+          doorCommand={overrideRequest.doorCommand}
+          onSubmit={handleConfirmOverrideRequest}
+          onClose={() => setOverrideRequest(null)}
+        />
+      )}
+
+      {pendingAction && (
+        <ReasonPromptModal
+          title={pendingAction.title}
+          onSubmit={pendingAction.run}
+          onClose={() => setPendingAction(null)}
+        />
       )}
     </div>
   );

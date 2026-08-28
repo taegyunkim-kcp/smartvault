@@ -3,14 +3,8 @@ import { listStatusEvents } from '../../api/events';
 import { listRooms } from '../../api/rooms';
 import StatusEventDetailModal from '../../components/StatusEventDetailModal';
 import { formatDateTime } from '../../utils/formatDateTime';
+import { STATUS_TYPE_LABELS, statusEventTarget } from '../../utils/statusEvents';
 import '../../styles/crud.css';
-
-const STATUS_TYPE_LABELS = {
-  absent: '부재',
-  anomaly: '이상',
-  unregistered_uid: '미등록',
-  wrong_room: '타내무반',
-};
 
 const PAGE_SIZE = 20;
 
@@ -88,8 +82,8 @@ function EventHandlingPage() {
     <div>
       <h2>이벤트 처리</h2>
       <p className="field-hint">
-        관리자가 아직 확인/조치하지 않은 판정 이벤트 목록입니다. 행을 클릭하면 상세 정보를 확인하고 조치할 수
-        있습니다.
+        관리자가 아직 확인/조치하지 않은 판정 이벤트·관리자 조작 이벤트 목록입니다. 행을 클릭하면 상세 정보를
+        확인하고 조치할 수 있습니다.
       </p>
 
       <div className="page-toolbar">
@@ -132,7 +126,7 @@ function EventHandlingPage() {
             <tr key={item.id} onClick={() => setSelectedEventId(item.id)}>
               <td>{formatDateTime(item.occurred_at)}</td>
               <td>{STATUS_TYPE_LABELS[item.status_type] || item.status_type}</td>
-              <td>{item.service_number || item.rfid_uid}</td>
+              <td>{statusEventTarget(item)}</td>
               <td>{item.room_code || '-'}</td>
             </tr>
           ))}

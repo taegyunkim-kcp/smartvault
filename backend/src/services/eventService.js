@@ -2,7 +2,7 @@ const eventRepository = require('../repositories/eventRepository');
 
 const DEFAULT_LIMIT = 50;
 const MAX_LIMIT = 200;
-const VALID_STATUS_TYPES = ['absent', 'anomaly', 'unregistered_uid', 'wrong_room'];
+const VALID_STATUS_TYPES = ['absent', 'anomaly', 'unregistered_uid', 'wrong_room', 'admin_action'];
 
 class ServiceError extends Error {
   constructor(message, status) {

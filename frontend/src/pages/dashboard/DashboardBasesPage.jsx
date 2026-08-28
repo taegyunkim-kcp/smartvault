@@ -6,14 +6,8 @@ import SortableTh from '../../components/SortableTh';
 import StatusEventDetailModal from '../../components/StatusEventDetailModal';
 import { useSortableList } from '../../hooks/useSortableList';
 import { formatDateTime } from '../../utils/formatDateTime';
+import { STATUS_TYPE_LABELS, statusEventTarget } from '../../utils/statusEvents';
 import '../../styles/crud.css';
-
-const STATUS_LABELS = {
-  absent: '부재',
-  anomaly: '이상',
-  unregistered_uid: '미등록',
-  wrong_room: '타내무반',
-};
 
 const STAT_CARDS = [
   { key: 'total_registered', label: '전체 등록' },
@@ -209,7 +203,7 @@ function DashboardBasesPage() {
 
       {personnelStatus && (
         <>
-          <h3 className="section-title">최근 이상 이벤트</h3>
+          <h3 className="section-title">최근 이상·조작 이벤트</h3>
           <table className="data-table">
             <thead>
               <tr>
@@ -227,8 +221,8 @@ function DashboardBasesPage() {
               )}
               {personnelStatus.recent_events.map((event) => (
                 <tr key={event.id} onClick={() => setSelectedEventId(event.id)}>
-                  <td>{STATUS_LABELS[event.status_type] || event.status_type}</td>
-                  <td>{event.service_number || event.rfid_uid}</td>
+                  <td>{STATUS_TYPE_LABELS[event.status_type] || event.status_type}</td>
+                  <td>{statusEventTarget(event)}</td>
                   <td>{event.room_code || '-'}</td>
                   <td>{formatDateTime(event.occurred_at)}</td>
                 </tr>

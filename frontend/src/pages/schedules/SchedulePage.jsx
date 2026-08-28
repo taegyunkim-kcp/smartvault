@@ -47,6 +47,10 @@ function SchedulePage() {
   const [tempReportedLockState, setTempReportedLockState] = useState(null);
   const [tempActiveOverride, setTempActiveOverride] = useState(null);
   const [durationMinutes, setDurationMinutes] = useState(10);
+  const [overrideApplicant, setOverrideApplicant] = useState('');
+  const [overrideApprover, setOverrideApprover] = useState('');
+  const [overrideReason, setOverrideReason] = useState('');
+  const [tempPolicyReason, setTempPolicyReason] = useState('');
   const [tempLoading, setTempLoading] = useState(false);
   const [tempSaving, setTempSaving] = useState(false);
   const [tempError, setTempError] = useState(null);
@@ -197,8 +201,9 @@ function SchedulePage() {
     setTempSaving(true);
     setTempError(null);
     try {
-      const saved = await saveTempPolicy(tempScopeType, tempScopeCode, tempWeekSlots);
+      const saved = await saveTempPolicy(tempScopeType, tempScopeCode, tempWeekSlots, tempPolicyReason.trim());
       setActiveTempPolicy(saved);
+      setTempPolicyReason('');
       await reloadPolicies();
     } catch (err) {
       setTempError(err.message);
@@ -211,7 +216,8 @@ function SchedulePage() {
     setTempSaving(true);
     setTempError(null);
     try {
-      await cancelTempPolicy(tempScopeType, tempScopeCode);
+      await cancelTempPolicy(tempScopeType, tempScopeCode, tempPolicyReason.trim());
+      setTempPolicyReason('');
       setActiveTempPolicy(null);
       if (tempScopeType === 'room') {
         const policy = await getEffectivePolicy(tempScopeCode);
@@ -231,9 +237,16 @@ function SchedulePage() {
     setTempSaving(true);
     setTempError(null);
     try {
-      await createOverride(tempScopeCode, 'open', Number(durationMinutes));
+      await createOverride(tempScopeCode, 'open', Number(durationMinutes), {
+        applicant: overrideApplicant.trim(),
+        approver: overrideApprover.trim(),
+        reason: overrideReason.trim(),
+      });
       const policy = await getEffectivePolicy(tempScopeCode);
       setTempActiveOverride(policy.active_override);
+      setOverrideApplicant('');
+      setOverrideApprover('');
+      setOverrideReason('');
       await loadActiveOverrides();
     } catch (err) {
       setTempError(err.message);
@@ -374,7 +387,11 @@ function SchedulePage() {
               {activeTempPolicy && (
                 <div className="page-toolbar">
                   <span>활성 임시정책 — {formatDateTime(activeTempPolicy.valid_until)}까지(다음 주부터 원래 정책 복귀)</span>
-                  <button type="button" disabled={tempSaving} onClick={handleCancelTempPolicy}>
+                  <button
+                    type="button"
+                    disabled={tempSaving || !tempPolicyReason.trim()}
+                    onClick={handleCancelTempPolicy}
+                  >
                     지금 취소
                   </button>
                 </div>
@@ -383,7 +400,19 @@ function SchedulePage() {
               <WeekSlotGrid value={tempWeekSlots} onChange={setTempWeekSlots} tempMode />
 
               <div className="form-actions">
-                <button type="button" className="primary" disabled={tempSaving} onClick={handleSaveTempPolicy}>
+                <input
+                  type="text"
+                  placeholder="사유"
+                  value={tempPolicyReason}
+                  onChange={(e) => setTempPolicyReason(e.target.value)}
+                  style={{ width: 200 }}
+                />
+                <button
+                  type="button"
+                  className="primary"
+                  disabled={tempSaving || !tempPolicyReason.trim()}
+                  onClick={handleSaveTempPolicy}
+                >
                   이번 주만 임시 적용
                 </button>
               </div>
@@ -411,7 +440,35 @@ function SchedulePage() {
                     style={{ width: 80 }}
                   />
                   <span>분 동안</span>
-                  <button type="button" className="primary" disabled={tempSaving} onClick={handleCreateOverride}>
+                  <input
+                    type="text"
+                    placeholder="신청자"
+                    value={overrideApplicant}
+                    onChange={(e) => setOverrideApplicant(e.target.value)}
+                    style={{ width: 100 }}
+                  />
+                  <input
+                    type="text"
+                    placeholder="승인자"
+                    value={overrideApprover}
+                    onChange={(e) => setOverrideApprover(e.target.value)}
+                    style={{ width: 100 }}
+                  />
+                  <input
+                    type="text"
+                    placeholder="사유"
+                    value={overrideReason}
+                    onChange={(e) => setOverrideReason(e.target.value)}
+                    style={{ width: 160 }}
+                  />
+                  <button
+                    type="button"
+                    className="primary"
+                    disabled={
+                      tempSaving || !overrideApplicant.trim() || !overrideApprover.trim() || !overrideReason.trim()
+                    }
+                    onClick={handleCreateOverride}
+                  >
                     즉시 개방
                   </button>
                 </div>
