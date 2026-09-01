@@ -25,5 +25,4 @@ CLAUDE.md 헤더 참고). **이 저장소의 사본은 스냅샷이다** — 실
 다시 복사해서 갱신해야 하고, 그때마다 `CLAUDE.md`도 같이 확인해서 핀맵이 안 어긋나게
 맞출 것(CLAUDE.md 9장 "변경 이력 관리 원칙" 그대로 적용).
 
-상세 설계 문서(회로도 이미지 포함)는 `docs/SmartVault_Design_Document.docx`와
-`docs/smartvault_schematics_detail*.docx`도 같이 참고.
+상세 설계 문서(회로도 이미지 포함)는 `docs/SmartVault_Design_Document.docx`도 같이 참고.
