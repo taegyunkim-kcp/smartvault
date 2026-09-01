@@ -6,11 +6,12 @@
 
 ```
 smartvault/
-├── firmware/         # Arduino MCU 펌웨어 (RFID×10 리더, 잠금장치 제어)
+├── hardware/          # 게이트웨이 보드 KiCad 프로젝트 (회로도/PCB)
+├── firmware/          # Arduino MCU 펌웨어 (RFID×10 리더, 잠금장치 제어)
 ├── gateway-bridge/    # 건물별 Concentrator - RS485 ↔ 중앙서버 브리지 (Python)
 ├── backend/           # API 서버 (Node/Express + MySQL)
 ├── frontend/          # 관리자 대시보드 (React)
-└── docs/              # 아키텍처/온보딩/프로토콜 문서
+└── docs/              # 아키텍처/온보딩/프로토콜/설계 문서
 ```
 
 ## 개발 시작하기 (Windows)

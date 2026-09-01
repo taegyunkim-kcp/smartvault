@@ -42,3 +42,6 @@ firmware/**/build/
 *-back.*
 *copy*.*
 * copy*.*
+
+# 특허 출원 전 — git에 올리지 않음(공개가 권리에 영향 줄 수 있음). 로컬에서는 계속 관리.
+docs/patent-claims-draft.md
