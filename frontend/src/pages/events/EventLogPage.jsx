@@ -3,6 +3,7 @@ import { listDoorEvents, listRfidEvents, listStatusEvents } from '../../api/even
 import { listRooms } from '../../api/rooms';
 import StatusEventDetailModal from '../../components/StatusEventDetailModal';
 import { formatDateTime } from '../../utils/formatDateTime';
+import { STATUS_TYPE_LABELS, statusEventTarget } from '../../utils/statusEvents';
 import '../../styles/crud.css';
 
 const TABS = [
@@ -13,12 +14,6 @@ const TABS = [
 
 const RFID_EVENT_TYPE_LABELS = { check_in: '체크인', check_out: '체크아웃', unknown: '알수없음' };
 const DOOR_STATE_LABELS = { open: '열림', closed: '닫힘' };
-const STATUS_TYPE_LABELS = {
-  absent: '부재',
-  anomaly: '이상',
-  unregistered_uid: '미등록',
-  wrong_room: '타내무반',
-};
 
 const PAGE_SIZE = 20;
 
@@ -238,7 +233,7 @@ function EventLogPage() {
               <tr key={item.id} onClick={() => setSelectedEventId(item.id)}>
                 <td>{formatDateTime(item.occurred_at)}</td>
                 <td>{STATUS_TYPE_LABELS[item.status_type] || item.status_type}</td>
-                <td>{item.service_number || item.rfid_uid}</td>
+                <td>{statusEventTarget(item)}</td>
                 <td>{item.room_code || '-'}</td>
                 <td>
                   {item.acknowledged_at ? (

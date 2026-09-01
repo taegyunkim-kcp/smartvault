@@ -24,16 +24,17 @@ function deletePolicy(policyId) {
   return request(`/api/door-policies/${policyId}`, { method: 'DELETE' });
 }
 
-function addMember(policyId, scopeType, scopeCode) {
+function addMember(policyId, scopeType, scopeCode, reason) {
   return request(`/api/door-policies/${policyId}/members`, {
     method: 'POST',
-    body: { scope_type: scopeType, scope_code: scopeCode },
+    body: { scope_type: scopeType, scope_code: scopeCode, reason },
   });
 }
 
-function removeMember(scopeType, scopeCode) {
+function removeMember(scopeType, scopeCode, reason) {
   return request(`/api/door-policies/members/${encodeURIComponent(scopeType)}/${encodeURIComponent(scopeCode)}`, {
     method: 'DELETE',
+    body: { reason },
   });
 }
 
@@ -46,16 +47,17 @@ function getTempPolicy(scopeType, scopeCode) {
   return request(`/api/door-policies/temp?${query}`);
 }
 
-function saveTempPolicy(scopeType, scopeCode, weekSlots) {
+function saveTempPolicy(scopeType, scopeCode, weekSlots, reason) {
   return request(`/api/door-policies/temp/${encodeURIComponent(scopeType)}/${encodeURIComponent(scopeCode)}`, {
     method: 'PUT',
-    body: { week_slots: weekSlots },
+    body: { week_slots: weekSlots, reason },
   });
 }
 
-function cancelTempPolicy(scopeType, scopeCode) {
+function cancelTempPolicy(scopeType, scopeCode, reason) {
   return request(`/api/door-policies/temp/${encodeURIComponent(scopeType)}/${encodeURIComponent(scopeCode)}`, {
     method: 'DELETE',
+    body: { reason },
   });
 }
 

@@ -2,11 +2,13 @@ const doorPolicyRepository = require('../repositories/doorPolicyRepository');
 const policyRepository = require('../repositories/policyRepository');
 const tempPolicyRepository = require('../repositories/tempPolicyRepository');
 const roomRepository = require('../repositories/roomRepository');
+const personnelStatusRepository = require('../repositories/personnelStatusRepository');
 const { DAY_KEYS, isLocked, getNextChangeAt, assertValidWeekSlots } = require('./doorScheduleUtil');
 
 const SCOPE_TYPES = ['base', 'building', 'room'];
 const SCOPE_TYPES_WITH_GLOBAL = ['base', 'building', 'room', 'global'];
 const POLICY_NAME_MAX = 100;
+const REASON_MAX = 200;
 
 class ServiceError extends Error {
   constructor(message, status) {
@@ -33,6 +35,17 @@ function assertPolicyName(name) {
   }
   if (name.length > POLICY_NAME_MAX) {
     throw new ServiceError(`정책 이름은 ${POLICY_NAME_MAX}자를 초과할 수 없습니다.`, 400);
+  }
+}
+
+// 정책 소속 변경(드래그이동/멤버 추가삭제)과 임시정책 저장/취소는 사유를 기록해야 한다 —
+// "작업자(관리자)"는 로그인 도입 전까지 항상 null로 남긴다([[door_policy_change_events]]).
+function assertReason(reason) {
+  if (typeof reason !== 'string' || reason.trim() === '') {
+    throw new ServiceError('사유는 필수입니다.', 400);
+  }
+  if (reason.length > REASON_MAX) {
+    throw new ServiceError(`사유는 ${REASON_MAX}자를 초과할 수 없습니다.`, 400);
   }
 }
 
@@ -303,21 +316,48 @@ async function deletePolicy(policyId) {
   await policyRepository.remove(policyId);
 }
 
-async function addMember(policyId, scopeType, scopeCode) {
+async function addMember(policyId, scopeType, scopeCode, reason) {
   assertScopeType(scopeType);
   if (typeof scopeCode !== 'string' || scopeCode.trim() === '') {
     throw new ServiceError('scope_code는 필수입니다.', 400);
   }
+  assertReason(reason);
   const policy = await policyRepository.findById(policyId);
   if (!policy) {
     throw new ServiceError('정책을 찾을 수 없습니다.', 404);
   }
   await policyRepository.addScope(policyId, scopeType, scopeCode);
+  await personnelStatusRepository.insertStatusEvent({
+    statusType: 'admin_action',
+    roomCode: scopeType === 'room' ? scopeCode : null,
+    detail: {
+      event_type: 'scope_assign',
+      scope_type: scopeType,
+      scope_code: scopeCode,
+      policy_id: policyId,
+      policy_name: policy.name,
+      reason,
+    },
+  });
 }
 
-async function removeMember(scopeType, scopeCode) {
+async function removeMember(scopeType, scopeCode, reason) {
   assertScopeType(scopeType);
+  assertReason(reason);
+  const existing = await policyRepository.findScopeAssignment(scopeType, scopeCode);
   await policyRepository.removeScope(scopeType, scopeCode);
+  await personnelStatusRepository.insertStatusEvent({
+    statusType: 'admin_action',
+    roomCode: scopeType === 'room' ? scopeCode : null,
+    detail: {
+      event_type: 'scope_unassign',
+      scope_type: scopeType,
+      scope_code: scopeCode,
+      policy_id: existing ? existing.policy_id : null,
+      policy_name: existing ? existing.policy_name : null,
+      reason,
+    },
+  });
 }
 
 async function getTempPolicy(scopeType, scopeCode) {
@@ -328,12 +368,13 @@ async function getTempPolicy(scopeType, scopeCode) {
   return tempPolicyRepository.find(scopeType, scopeCode);
 }
 
-async function saveTempPolicy(scopeType, scopeCode, weekSlots) {
+async function saveTempPolicy(scopeType, scopeCode, weekSlots, reason) {
   assertScopeTypeWithGlobal(scopeType);
   if (!scopeCode) {
     throw new ServiceError('scope_code는 필수입니다.', 400);
   }
   assertWeekSlots(weekSlots);
+  assertReason(reason);
 
   const now = new Date();
   // mysql2가 DATETIME(초 단위, 밀리초 없음) 컬럼에 바인딩할 때 밀리초를 반올림하므로,
@@ -341,12 +382,35 @@ async function saveTempPolicy(scopeType, scopeCode, weekSlots) {
   // 않음"으로 보이는 경합이 생긴다. 밀리초를 미리 0으로 잘라내 항상 내림되게 한다.
   now.setMilliseconds(0);
   const validUntil = computeNextWeekBoundaryUTC(now);
-  return tempPolicyRepository.upsert(scopeType, scopeCode, { weekSlots, validFrom: now, validUntil });
+  const saved = await tempPolicyRepository.upsert(scopeType, scopeCode, { weekSlots, validFrom: now, validUntil });
+  await personnelStatusRepository.insertStatusEvent({
+    statusType: 'admin_action',
+    roomCode: scopeType === 'room' ? scopeCode : null,
+    detail: {
+      event_type: 'temp_policy_save',
+      scope_type: scopeType,
+      scope_code: scopeCode,
+      valid_until: validUntil,
+      reason,
+    },
+  });
+  return saved;
 }
 
-async function cancelTempPolicy(scopeType, scopeCode) {
+async function cancelTempPolicy(scopeType, scopeCode, reason) {
   assertScopeTypeWithGlobal(scopeType);
+  assertReason(reason);
   await tempPolicyRepository.remove(scopeType, scopeCode);
+  await personnelStatusRepository.insertStatusEvent({
+    statusType: 'admin_action',
+    roomCode: scopeType === 'room' ? scopeCode : null,
+    detail: {
+      event_type: 'temp_policy_cancel',
+      scope_type: scopeType,
+      scope_code: scopeCode,
+      reason,
+    },
+  });
 }
 
 module.exports = {

@@ -5,11 +5,11 @@ async function findById(id) {
   return rows[0] || null;
 }
 
-async function create({ roomCode, durationMinutes, doorCommand }) {
+async function create({ roomCode, durationMinutes, doorCommand, applicant, approver, reason }) {
   const [result] = await pool.execute(
-    `INSERT INTO door_overrides (room_code, door_command, starts_at, expires_at)
-     VALUES (:roomCode, :doorCommand, NOW(), NOW() + INTERVAL :durationMinutes MINUTE)`,
-    { roomCode, durationMinutes, doorCommand }
+    `INSERT INTO door_overrides (room_code, door_command, applicant, approver, reason, starts_at, expires_at)
+     VALUES (:roomCode, :doorCommand, :applicant, :approver, :reason, NOW(), NOW() + INTERVAL :durationMinutes MINUTE)`,
+    { roomCode, durationMinutes, doorCommand, applicant, approver, reason }
   );
   return findById(result.insertId);
 }
@@ -18,14 +18,14 @@ async function create({ roomCode, durationMinutes, doorCommand }) {
 // 만료 시각을 DB의 NOW() 기준 슬롯 경계로 직접 계산해서, 같은 슬롯 안에서 여러 방을 연달아
 // 클릭해도(JS 쪽에서 분 단위로 반올림한 duration을 각자 넘기던 예전 방식과 달리) 전부 같은
 // expires_at을 갖게 한다.
-async function createUntilSlotEnd({ roomCode, doorCommand }) {
+async function createUntilSlotEnd({ roomCode, doorCommand, applicant, approver, reason }) {
   const [result] = await pool.execute(
-    `INSERT INTO door_overrides (room_code, door_command, starts_at, expires_at)
+    `INSERT INTO door_overrides (room_code, door_command, applicant, approver, reason, starts_at, expires_at)
      VALUES (
-       :roomCode, :doorCommand, NOW(),
+       :roomCode, :doorCommand, :applicant, :approver, :reason, NOW(),
        DATE_ADD(DATE_FORMAT(NOW(), '%Y-%m-%d %H:%i:00'), INTERVAL (30 - MINUTE(NOW()) MOD 30) MINUTE)
      )`,
-    { roomCode, doorCommand }
+    { roomCode, doorCommand, applicant, approver, reason }
   );
   return findById(result.insertId);
 }

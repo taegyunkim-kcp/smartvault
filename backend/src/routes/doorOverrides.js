@@ -34,6 +34,9 @@ router.post('/', async (req, res) => {
       roomCode: req.body.room_code,
       durationMinutes: req.body.duration_minutes,
       doorCommand: req.body.door_command,
+      applicant: req.body.applicant,
+      approver: req.body.approver,
+      reason: req.body.reason,
     });
     res.status(201).json(override);
   } catch (err) {

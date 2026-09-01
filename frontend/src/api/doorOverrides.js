@@ -8,10 +8,17 @@ function listActiveOverrides() {
   return request('/api/door-overrides/active');
 }
 
-function createOverride(roomCode, doorCommand, durationMinutes) {
+function createOverride(roomCode, doorCommand, durationMinutes, { applicant, approver, reason } = {}) {
   return request('/api/door-overrides', {
     method: 'POST',
-    body: { room_code: roomCode, door_command: doorCommand, duration_minutes: durationMinutes },
+    body: {
+      room_code: roomCode,
+      door_command: doorCommand,
+      duration_minutes: durationMinutes,
+      applicant,
+      approver,
+      reason,
+    },
   });
 }
 

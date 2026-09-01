@@ -7,6 +7,8 @@ const dashboardService = require('./dashboardService');
 const { isLocked } = require('./doorScheduleUtil');
 
 const UID_HISTORY_LIMIT = 20;
+const SCOPE_TYPE_LABELS = { base: '중대', building: '소대', room: '내무반', global: '전체' };
+const DOOR_COMMAND_LABELS = { open: '개방', lock: '잠금' };
 
 class ServiceError extends Error {
   constructor(message, status) {
@@ -156,8 +158,34 @@ async function buildReason(event, person) {
       return `소속 내무반(${homeRoomCode || '-'})에서 체크인 기록이 없지만, 판정 시점에 정책상 개방 시간대였기 때문에 '이상'이 아닌 '부재'로 분류되었습니다.`;
     case 'unregistered_uid':
       return `등록된 인원과 매칭되지 않은 RFID 태그(${event.rfid_uid || '-'})가 내무반(${event.room_code || '-'})에서 감지되었습니다.`;
+    case 'admin_action':
+      return buildAdminActionReason(event.detail || {}, event.room_code);
     default:
       return '';
+  }
+}
+
+// 즉각 전환(door_overrides)과 정책 변경/임시정책 저장·취소는 관리자가 직접 입력한 사유를
+// 이벤트로 남긴 것이라, 판정 로직 대신 detail JSON을 그대로 문장으로 풀어서 보여준다.
+function buildAdminActionReason(detail, roomCode) {
+  const scopeLabel = detail.scope_type ? SCOPE_TYPE_LABELS[detail.scope_type] || detail.scope_type : '';
+  const target = detail.scope_code ? `${scopeLabel} ${detail.scope_code}` : roomCode || '-';
+
+  switch (detail.event_type) {
+    case 'door_override_start':
+      return `${detail.applicant || '-'}의 신청, ${detail.approver || '-'}의 승인으로 ${roomCode || '-'}에 즉각 ${DOOR_COMMAND_LABELS[detail.door_command] || detail.door_command}을 실행했습니다. 사유: ${detail.reason || '-'}`;
+    case 'door_override_cancel':
+      return `${roomCode || '-'}의 즉각 실행(신청자: ${detail.applicant || '-'})을 취소했습니다.`;
+    case 'scope_assign':
+      return `${target}를(을) "${detail.policy_name || '정책'}"에 편입했습니다. 사유: ${detail.reason || '-'}`;
+    case 'scope_unassign':
+      return `${target}를(을) ${detail.policy_name ? `"${detail.policy_name}"에서 ` : ''}제외했습니다. 사유: ${detail.reason || '-'}`;
+    case 'temp_policy_save':
+      return `${target}에 이번 주 임시정책을 적용했습니다. 사유: ${detail.reason || '-'}`;
+    case 'temp_policy_cancel':
+      return `${target}의 임시정책을 취소했습니다. 사유: ${detail.reason || '-'}`;
+    default:
+      return detail.reason || '';
   }
 }
 
