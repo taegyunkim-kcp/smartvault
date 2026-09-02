@@ -708,172 +708,6 @@
 			)
 			(embedded_fonts no)
 		)
-		(symbol "Jumper:Jumper_2_Bridged"
-			(pin_numbers
-				(hide yes)
-			)
-			(pin_names
-				(offset 0)
-				(hide yes)
-			)
-			(exclude_from_sim no)
-			(in_bom yes)
-			(on_board yes)
-			(in_pos_files yes)
-			(duplicate_pin_numbers_are_jumpers no)
-			(property "Reference" "JP"
-				(at 0 1.905 0)
-				(show_name no)
-				(do_not_autoplace no)
-				(effects
-					(font
-						(size 1.27 1.27)
-					)
-				)
-			)
-			(property "Value" "Jumper_2_Bridged"
-				(at 0 -2.54 0)
-				(show_name no)
-				(do_not_autoplace no)
-				(effects
-					(font
-						(size 1.27 1.27)
-					)
-				)
-			)
-			(property "Footprint" ""
-				(at 0 0 0)
-				(show_name no)
-				(do_not_autoplace no)
-				(hide yes)
-				(effects
-					(font
-						(size 1.27 1.27)
-					)
-				)
-			)
-			(property "Datasheet" ""
-				(at 0 -5.08 0)
-				(show_name no)
-				(do_not_autoplace no)
-				(hide yes)
-				(effects
-					(font
-						(size 1.27 1.27)
-					)
-				)
-			)
-			(property "Description" "Jumper, 2-pole, closed/bridged"
-				(at 0 -7.62 0)
-				(show_name no)
-				(do_not_autoplace no)
-				(hide yes)
-				(effects
-					(font
-						(size 1.27 1.27)
-					)
-				)
-			)
-			(property "ki_keywords" "Jumper SPST"
-				(at 0 0 0)
-				(show_name no)
-				(do_not_autoplace no)
-				(hide yes)
-				(effects
-					(font
-						(size 1.27 1.27)
-					)
-				)
-			)
-			(property "ki_fp_filters" "Jumper* TestPoint*2Pads* TestPoint*Bridge*"
-				(at 0 0 0)
-				(show_name no)
-				(do_not_autoplace no)
-				(hide yes)
-				(effects
-					(font
-						(size 1.27 1.27)
-					)
-				)
-			)
-			(symbol "Jumper_2_Bridged_0_0"
-				(circle
-					(center -2.032 0)
-					(radius 0.508)
-					(stroke
-						(width 0)
-						(type default)
-					)
-					(fill
-						(type none)
-					)
-				)
-				(circle
-					(center 2.032 0)
-					(radius 0.508)
-					(stroke
-						(width 0)
-						(type default)
-					)
-					(fill
-						(type none)
-					)
-				)
-			)
-			(symbol "Jumper_2_Bridged_0_1"
-				(arc
-					(start -1.524 0.254)
-					(mid 0 0.762)
-					(end 1.524 0.254)
-					(stroke
-						(width 0)
-						(type default)
-					)
-					(fill
-						(type none)
-					)
-				)
-			)
-			(symbol "Jumper_2_Bridged_1_1"
-				(pin passive line
-					(at -5.08 0 0)
-					(length 2.54)
-					(name "A"
-						(effects
-							(font
-								(size 1.27 1.27)
-							)
-						)
-					)
-					(number "1"
-						(effects
-							(font
-								(size 1.27 1.27)
-							)
-						)
-					)
-				)
-				(pin passive line
-					(at 5.08 0 180)
-					(length 2.54)
-					(name "B"
-						(effects
-							(font
-								(size 1.27 1.27)
-							)
-						)
-					)
-					(number "2"
-						(effects
-							(font
-								(size 1.27 1.27)
-							)
-						)
-					)
-				)
-			)
-			(embedded_fonts no)
-		)
 		(symbol "Switch:SW_DIP_x04"
 			(pin_names
 				(offset 0)
@@ -1513,6 +1347,12 @@
 		(uuid "d8ec40c9-4eed-4cec-9974-8d3566b6b01e")
 	)
 	(junction
+		(at 40.64 55.88)
+		(diameter 0)
+		(color 0 0 0 0)
+		(uuid "e24ceaf3-6096-4615-b2fe-d7f0e79a889c")
+	)
+	(junction
 		(at 97.79 120.65)
 		(diameter 0)
 		(color 0 0 0 0)
@@ -1569,6 +1409,26 @@
 			(type default)
 		)
 		(uuid "099bed04-73ad-4136-b4a2-9950c84ddb46")
+	)
+	(wire
+		(pts
+			(xy 144.78 55.88) (xy 40.64 55.88)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "0c81f153-ec64-4309-a9d3-7b04bf9d597a")
+	)
+	(wire
+		(pts
+			(xy 40.64 50.8) (xy 40.64 55.88)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "0d79f013-8844-446f-b184-a41a9e0f419d")
 	)
 	(wire
 		(pts
@@ -1792,16 +1652,6 @@
 	)
 	(wire
 		(pts
-			(xy 40.64 50.8) (xy 40.64 66.04)
-		)
-		(stroke
-			(width 0)
-			(type default)
-		)
-		(uuid "6e64cc26-dc15-40f5-ad52-20a93c62d118")
-	)
-	(wire
-		(pts
 			(xy 132.08 93.98) (xy 128.27 93.98)
 		)
 		(stroke
@@ -1852,6 +1702,16 @@
 	)
 	(wire
 		(pts
+			(xy 161.29 63.5) (xy 161.29 102.87)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "882cd3cb-68a8-4086-9596-75ed474be851")
+	)
+	(wire
+		(pts
 			(xy 59.69 83.82) (xy 77.47 83.82)
 		)
 		(stroke
@@ -1889,6 +1749,16 @@
 			(type default)
 		)
 		(uuid "9a2b5580-7ce7-4b32-b4dc-d76d86adba68")
+	)
+	(wire
+		(pts
+			(xy 40.64 55.88) (xy 40.64 66.04)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "9aaa94da-8b4b-409d-8969-99969ebf548f")
 	)
 	(wire
 		(pts
@@ -2142,16 +2012,6 @@
 	)
 	(wire
 		(pts
-			(xy 161.29 63.5) (xy 161.29 105.41)
-		)
-		(stroke
-			(width 0)
-			(type default)
-		)
-		(uuid "e793bfcc-19f3-4ece-916d-4df96d1e2990")
-	)
-	(wire
-		(pts
 			(xy 68.58 71.12) (xy 93.98 71.12)
 		)
 		(stroke
@@ -2250,79 +2110,7 @@
 		)
 		(uuid "ff75192f-3578-4512-8a0c-ccbd012761e3")
 	)
-	(global_label "D9_INO"
-		(shape bidirectional)
-		(at 124.46 105.41 270)
-		(fields_autoplaced yes)
-		(effects
-			(font
-				(size 1.27 1.27)
-			)
-			(justify right)
-		)
-		(uuid "086a5bc1-f491-437a-9bc5-170d8be62624")
-		(property "Intersheetrefs" "${INTERSHEET_REFS}"
-			(at 124.46 116.2194 90)
-			(hide yes)
-			(show_name no)
-			(do_not_autoplace no)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(justify right)
-			)
-		)
-	)
-	(global_label "D13_INO"
-		(shape input)
-		(at 128.27 105.41 270)
-		(fields_autoplaced yes)
-		(effects
-			(font
-				(size 1.27 1.27)
-			)
-			(justify right)
-		)
-		(uuid "2b085964-7d17-4b95-861e-555a6223b3a1")
-		(property "Intersheetrefs" "${INTERSHEET_REFS}"
-			(at 128.27 116.3176 90)
-			(hide yes)
-			(show_name no)
-			(do_not_autoplace no)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(justify right)
-			)
-		)
-	)
-	(global_label "A4_INO"
-		(shape output)
-		(at 161.29 105.41 270)
-		(fields_autoplaced yes)
-		(effects
-			(font
-				(size 1.27 1.27)
-			)
-			(justify right)
-		)
-		(uuid "37825841-f191-42f6-ba66-c77067cb8615")
-		(property "Intersheetrefs" "${INTERSHEET_REFS}"
-			(at 161.29 114.9267 90)
-			(hide yes)
-			(show_name no)
-			(do_not_autoplace no)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(justify right)
-			)
-		)
-	)
-	(global_label "5V_PULL_UP"
+	(global_label "5V_RAW"
 		(shape input)
 		(at 40.64 50.8 90)
 		(fields_autoplaced yes)
@@ -2332,9 +2120,9 @@
 			)
 			(justify left)
 		)
-		(uuid "53742f65-8a56-4efb-96d8-d27719dbcb61")
+		(uuid "39fcae9e-f65f-4ca1-ba34-d434bf3ddc8b")
 		(property "Intersheetrefs" "${INTERSHEET_REFS}"
-			(at 40.64 36.3243 90)
+			(at 40.64 40.7391 90)
 			(hide yes)
 			(show_name no)
 			(do_not_autoplace no)
@@ -2355,6 +2143,201 @@
 					(size 1.27 1.27)
 				)
 				(justify left)
+			)
+		)
+		(property "필드" "+5V"
+			(at 44.4818 50.8 90)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left)
+			)
+		)
+	)
+	(global_label "Arduino_A5"
+		(shape input)
+		(at 128.27 105.41 270)
+		(effects
+			(font
+				(size 1.27 1.27)
+			)
+			(justify right)
+		)
+		(uuid "3f3a840a-a4e3-499b-b4cd-935ab2738392")
+		(property "Intersheetrefs" "${INTERSHEET_REFS}"
+			(at 128.27 110.6933 90)
+			(hide yes)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify right)
+			)
+		)
+		(property "Netclass" "Default"
+			(at 132.1118 105.41 90)
+			(hide yes)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify right)
+			)
+		)
+		(property "필드" "DEV_CP"
+			(at 130.81 108.204 90)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify right)
+			)
+		)
+	)
+	(global_label "Arduino_A3"
+		(shape output)
+		(at 161.29 102.87 270)
+		(effects
+			(font
+				(size 1.27 1.27)
+			)
+			(justify right)
+		)
+		(uuid "98bea1b4-32b8-44e9-b7c8-df123089fadd")
+		(property "Intersheetrefs" "${INTERSHEET_REFS}"
+			(at 161.29 108.1533 90)
+			(hide yes)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify right)
+			)
+		)
+		(property "Netclass" "Default"
+			(at 165.1318 102.87 90)
+			(hide yes)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify right)
+			)
+		)
+		(property "필드" "DEV_ID"
+			(at 164.846 106.68 90)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify right)
+			)
+		)
+	)
+	(global_label "Arduino_A4"
+		(shape input)
+		(at 124.46 105.41 270)
+		(effects
+			(font
+				(size 1.27 1.27)
+			)
+			(justify right)
+		)
+		(uuid "a34a8a4c-4fc2-4a07-9a4b-4bb696f991c6")
+		(property "Intersheetrefs" "${INTERSHEET_REFS}"
+			(at 124.46 110.6933 90)
+			(hide yes)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify right)
+			)
+		)
+		(property "Netclass" "Default"
+			(at 128.3018 105.41 90)
+			(hide yes)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify right)
+			)
+		)
+		(property "필드" "DEV_PL"
+			(at 121.412 108.204 90)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify right)
+			)
+		)
+	)
+	(global_label "Arduino_D7"
+		(shape input)
+		(at 191.77 69.85 270)
+		(effects
+			(font
+				(size 1.27 1.27)
+			)
+			(justify right)
+		)
+		(uuid "dcf01313-f28c-41c8-ab18-c21d86aa218f")
+		(property "Intersheetrefs" "${INTERSHEET_REFS}"
+			(at 191.77 83.3579 90)
+			(hide yes)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify right)
+			)
+		)
+		(property "Netclass" "Default"
+			(at 195.6118 69.85 90)
+			(hide yes)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify right)
+			)
+		)
+		(property "필드" "BUZZ"
+			(at 195.326 73.914 90)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify right)
 			)
 		)
 	)
@@ -2389,7 +2372,7 @@
 				)
 			)
 		)
-		(property "Footprint" ""
+		(property "Footprint" "Resistor_SMD:R_0805_2012Metric"
 			(at 82.55 67.818 90)
 			(hide yes)
 			(show_name no)
@@ -2593,7 +2576,7 @@
 				)
 			)
 		)
-		(property "Footprint" ""
+		(property "Footprint" "Resistor_SMD:R_0805_2012Metric"
 			(at 198.12 66.548 90)
 			(hide yes)
 			(show_name no)
@@ -2675,7 +2658,7 @@
 				(justify right)
 			)
 		)
-		(property "Footprint" ""
+		(property "Footprint" "Buzzer_Beeper:Buzzer_15x7.5RM7.6"
 			(at 209.55 62.865 90)
 			(hide yes)
 			(show_name no)
@@ -2931,7 +2914,7 @@
 				)
 			)
 		)
-		(property "Footprint" ""
+		(property "Footprint" "Resistor_SMD:R_0805_2012Metric"
 			(at 72.39 80.518 90)
 			(hide yes)
 			(show_name no)
@@ -3010,7 +2993,7 @@
 				)
 			)
 		)
-		(property "Footprint" ""
+		(property "Footprint" "Resistor_SMD:R_0805_2012Metric"
 			(at 57.15 75.438 90)
 			(hide yes)
 			(show_name no)
@@ -3089,7 +3072,7 @@
 				)
 			)
 		)
-		(property "Footprint" ""
+		(property "Footprint" "Resistor_SMD:R_0805_2012Metric"
 			(at 81.28 77.978 90)
 			(hide yes)
 			(show_name no)
@@ -3168,7 +3151,7 @@
 				)
 			)
 		)
-		(property "Footprint" ""
+		(property "Footprint" "Resistor_SMD:R_0805_2012Metric"
 			(at 55.88 85.598 90)
 			(hide yes)
 			(show_name no)
@@ -3247,7 +3230,7 @@
 				)
 			)
 		)
-		(property "Footprint" ""
+		(property "Footprint" "Resistor_SMD:R_0805_2012Metric"
 			(at 64.77 72.898 90)
 			(hide yes)
 			(show_name no)
@@ -3296,88 +3279,6 @@
 		)
 	)
 	(symbol
-		(lib_id "Jumper:Jumper_2_Bridged")
-		(at 191.77 74.93 90)
-		(unit 1)
-		(body_style 1)
-		(exclude_from_sim no)
-		(in_bom yes)
-		(on_board yes)
-		(in_pos_files yes)
-		(dnp no)
-		(fields_autoplaced yes)
-		(uuid "a7b700c4-c698-4509-9c40-80c544e070ee")
-		(property "Reference" "JP1"
-			(at 193.04 73.6599 90)
-			(show_name no)
-			(do_not_autoplace no)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(justify right)
-			)
-		)
-		(property "Value" "Jumper_2_Bridged"
-			(at 193.04 76.1999 90)
-			(show_name no)
-			(do_not_autoplace no)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(justify right)
-			)
-		)
-		(property "Footprint" ""
-			(at 191.77 74.93 0)
-			(hide yes)
-			(show_name no)
-			(do_not_autoplace no)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-			)
-		)
-		(property "Datasheet" ""
-			(at 196.85 74.93 0)
-			(hide yes)
-			(show_name no)
-			(do_not_autoplace no)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-			)
-		)
-		(property "Description" "Jumper, 2-pole, closed/bridged"
-			(at 199.39 74.93 0)
-			(hide yes)
-			(show_name no)
-			(do_not_autoplace no)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-			)
-		)
-		(pin "2"
-			(uuid "bc4b211e-dfe5-4295-b9bd-ddf3db1f3780")
-		)
-		(pin "1"
-			(uuid "70377742-8f65-417c-9f7c-74ea76207691")
-		)
-		(instances
-			(project "smartvault"
-				(path "/af91263a-efdd-447b-8560-b52a082ca76c/98ecc186-e801-4a35-bf51-6b9b2fab6e53"
-					(reference "JP1")
-					(unit 1)
-				)
-			)
-		)
-	)
-	(symbol
 		(lib_id "Device:R")
 		(at 63.5 81.28 90)
 		(unit 1)
@@ -3408,7 +3309,7 @@
 				)
 			)
 		)
-		(property "Footprint" ""
+		(property "Footprint" "Resistor_SMD:R_0805_2012Metric"
 			(at 63.5 83.058 90)
 			(hide yes)
 			(show_name no)
@@ -3487,7 +3388,7 @@
 				)
 			)
 		)
-		(property "Footprint" ""
+		(property "Footprint" "Resistor_SMD:R_0805_2012Metric"
 			(at 73.66 70.358 90)
 			(hide yes)
 			(show_name no)

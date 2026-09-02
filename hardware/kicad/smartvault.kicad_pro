@@ -562,6 +562,10 @@
     },
     "net_colors": null,
     "netclass_assignments": {
+      "12V_LOCK": [
+        "PWR_12V",
+        "PWR_3V3"
+      ],
       "3V3_RAW": [
         "PWR_3V3"
       ],
@@ -583,10 +587,67 @@
       "A5": [
         "Default"
       ],
+      "Arduino_A0": [
+        "Default"
+      ],
+      "Arduino_A1": [
+        "Default"
+      ],
+      "Arduino_A2": [
+        "Default"
+      ],
+      "Arduino_A3": [
+        "Default"
+      ],
+      "Arduino_A4": [
+        "Default"
+      ],
+      "Arduino_A5": [
+        "Default"
+      ],
+      "Arduino_D11": [
+        "Default"
+      ],
+      "Arduino_D12": [
+        "Default"
+      ],
+      "Arduino_D13": [
+        "Default"
+      ],
+      "Arduino_D2": [
+        "Default"
+      ],
+      "Arduino_D3": [
+        "Default"
+      ],
+      "Arduino_D4": [
+        "Default"
+      ],
+      "Arduino_D5": [
+        "Default"
+      ],
+      "Arduino_D6": [
+        "Default"
+      ],
+      "Arduino_D7": [
+        "Default"
+      ],
+      "Arduino_D8": [
+        "Default"
+      ],
+      "Arduino_D9": [
+        "Default"
+      ],
       "D1": [
         "Default"
       ],
+      "H_Reset": [
+        "Default"
+      ],
       "Reset": [
+        "Default"
+      ],
+      "S_Reset": [
         "Default"
       ],
       "Sheet1": [
@@ -773,7 +834,7 @@
         "uuid": "af91263a-efdd-447b-8560-b52a082ca76c"
       }
     ],
-    "used_designators": "F1,#PWR1-31,D1-4,R1-2,R4,R7-34,J1-16,Q1-4,U1-2,U4-9,C1-6,C9-14,SW1-6,BZ1,JP1,J_MFC_2-11",
+    "used_designators": "F1,#PWR1-35,D1-4,R1-2,R4,R7-34,J1-16,Q1-4,U1-2,U4-9,C1-14,SW1-6,BZ1,JP1-2,J_MFC_2-11,A1",
     "variants": []
   },
   "sheets": [
