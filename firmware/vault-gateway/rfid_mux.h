@@ -4,7 +4,7 @@
 #include <Arduino.h>
 
 // 리더 10개를 74LVC138A 디코더로 순차 폴링한다. 동시에 두 개 이상을 선택하면 SPI 버스가
-// 충돌하므로(CLAUDE.md 4장), rfidMux_scanReader() 호출 후 다른 리더로 넘어가기 전에는
+// 충돌하므로(hardware/CLAUDE.md 2장), rfidMux_scanReader() 호출 후 다른 리더로 넘어가기 전에는
 // 반드시 그 리더에 대한 SPI 트랜잭션을 끝내야 한다 — 이 모듈 밖에서 디코더 주소를 직접
 // 건드리지 말 것.
 //

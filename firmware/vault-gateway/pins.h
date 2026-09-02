@@ -3,8 +3,8 @@
 
 #include <Arduino.h> // uint8_t / A0~A5 등 아두이노 핀 매크로 — 이 헤더 혼자 include돼도 되게
 
-// 핀맵의 유일한 근거는 CLAUDE.md 3장(Arduino UNO 핀맵 확정)이다.
-// 회로/핀맵이 바뀌면 CLAUDE.md를 먼저 고치고, 그 다음 이 파일을 맞춘다 — 반대 순서 금지.
+// 핀맵의 유일한 근거는 hardware/CLAUDE.md 1장(Arduino UNO 핀맵 확정)이다.
+// 회로/핀맵이 바뀌면 hardware/CLAUDE.md를 먼저 고치고, 그 다음 이 파일을 맞춘다 — 반대 순서 금지.
 
 // RFID 리더 CS 선택용 74LVC138A 디코더 (U6=SS_1~8 / U7=SS_9~10, BANK로 상호배타 전환)
 constexpr uint8_t PIN_DEC_A = 2;

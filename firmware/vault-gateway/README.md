@@ -1,7 +1,7 @@
 # vault-gateway — 보관함 게이트웨이(Arduino UNO) 펌웨어
 
-내무반 1개당 1대 설치되는 컨트롤러 보드 펌웨어. 핀맵/하드웨어 확정 스펙은 저장소 루트
-`CLAUDE.md` 3장을 따른다 — 핀 번호를 바꿔야 하면 그 문서를 먼저 고치고 `pins.h`를 맞출 것.
+내무반 1개당 1대 설치되는 컨트롤러 보드 펌웨어. 핀맵/하드웨어 확정 스펙은
+`hardware/CLAUDE.md` 1장을 따른다 — 핀 번호를 바꿔야 하면 그 문서를 먼저 고치고 `pins.h`를 맞출 것.
 
 ## 레거시 참고 코드
 
@@ -47,7 +47,7 @@ arduino-cli compile --fqbn arduino:avr:uno --warnings all firmware/vault-gateway
 
 | 파일 | 역할 |
 |---|---|
-| `pins.h` | 핀맵 상수 (근거: CLAUDE.md 3장) |
+| `pins.h` | 핀맵 상수 (근거: hardware/CLAUDE.md 1장) |
 | `gateway_identity.h` | **설치자가 직접 편집**하는 `GATEWAY_GROUP_ID`(2글자) — DIP주소와 합쳐 4글자 게이트웨이 ID를 만든다 |
 | `device_id.*` | 74HC165 DIP 스위치 8비트 읽기 (부팅 시 1회) |
 | `rfid_mux.*` | 74LVC138A 디코더로 리더 선택. **"새 카드 이벤트"가 아니라 "지금 상태 조회"** — 호출될 때마다 그 리더를 재초기화해서 계속 거치 중인 카드도 매번 다시 감지되게 함(스마트폰이 슬롯에 몇 시간씩 거치돼 있어도 실시간 상태를 알아야 하므로). **MFRC522 라이브러리의 SS 핀 토글은 실제 배선과 무관** — 진짜 선택은 이 모듈이 디코더 주소로 미리 해둔다 |

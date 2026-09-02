@@ -1,6 +1,6 @@
 // SmartVault 보관함 게이트웨이(Arduino UNO) 펌웨어 — v0 초안
 //
-// 핀맵: pins.h (근거: CLAUDE.md 3장)
+// 핀맵: pins.h (근거: hardware/CLAUDE.md 1장)
 // 프로토콜: firmware/docs/protocol-spec.md + rs485_link.cpp
 // Fail-secure 정책: door_lock.h 상단 주석 참고 (통신 두절 시 무조건 잠금, 로컬 버튼 무시 —
 // 행정반 비상 물리키 존재를 전제로 확정됨, 2026-09-01)
@@ -10,7 +10,7 @@
 // 다만 리더 CS 방식(그쪽은 리더당 GPIO 10개, 이 보드는 74LVC138A 디코더)과 통신 프레임
 // 포맷(그쪽은 가변 구분자, 여기는 고정 길이+체크섬)은 새 보드/명세에 맞춰 새로 짰다 —
 // architecture.md가 말한 "로직은 유지, 구조는 재설계" 원칙 그대로.
-// 내장 AVR 워치독(wdt_enable/wdt_reset)도 레거시에서 가져온 것 — CLAUDE.md 7장의 외부
+// 내장 AVR 워치독(wdt_enable/wdt_reset)도 레거시에서 가져온 것 — hardware/CLAUDE.md 5장의 외부
 // ATtiny13A 워치독과는 별개 레이어다: 내장 WDT는 "RS485 선로가 조용하면 칩 스스로
 // 2초 뒤 리셋"(레거시와 동일 임계값), ATtiny13A는 "칩 자체가 응답을 안 하는 경우"까지
 // 잡아내는 바깥쪽 안전망 — 두 개가 서로 대체하지 않고 같이 있어야 한다.
